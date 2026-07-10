@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ChevronDown,
   Rotate3d,
@@ -17,7 +17,6 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import AFrameScene, { SceneParams } from './AFrameScene';
 import FloorPlanSvg from './FloorPlanSvg';
 
 const tabs = ['КОНСТРУКТОР ДОМА', 'ПЛАНИРОВКА', 'ИНТЕРЬЕР', 'ЭКСТЕРЬЕР', 'РАСЧЕТ СТОИМОСТИ'];
@@ -282,40 +281,56 @@ export default function Configurator() {
   const [interiorSelected, setInteriorSelected] = useState(0);
   const [windowSelected, setWindowSelected] = useState(0);
 
-  const [sceneParams, setSceneParams] = useState<SceneParams>({
-    height: 8.0,
-    roofAngle: 60,
-    floors: 1,
-    roofColorIdx: 0,
-    facadeColorIdx: 0,
-  });
-
   const [applying, setApplying] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const resetCameraRef = useRef<(() => void) | null>(null);
-  const handleResetRegister = useCallback((fn: () => void) => {
-    resetCameraRef.current = fn;
-  }, []);
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const send3d = (msg: object) =>
+    frameRef.current?.contentWindow?.postMessage({ type: 'shag3d', ...msg }, '*');
+
+  const sendColors = (overrides: Record<string, number> = {}) =>
+    send3d({
+      colors: {
+        roofColorIdx: roofSelected,
+        facadeColorIdx: facadeSelected,
+        interiorColorIdx: interiorSelected,
+        windowColorIdx: windowSelected,
+        ...overrides,
+      },
+    });
+
+  const viewName = (v: number) => (v === 1 ? 'plan' : v === 2 ? 'interior' : 'exterior');
 
   const handleApply = () => {
     if (applying) return;
     setApplying(true);
     setTimeout(() => {
-      setSceneParams({
-        height,
-        roofAngle,
-        floors,
-        roofColorIdx: roofSelected,
-        facadeColorIdx: facadeSelected,
-      });
+      send3d({ params: { height, roofAngle, wall: wallThickness, floors } });
       setApplying(false);
       setToastVisible(true);
       if (toastTimer.current) clearTimeout(toastTimer.current);
       toastTimer.current = setTimeout(() => setToastVisible(false), 2500);
     }, 600);
   };
+
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type !== 'shag3d-ready') return;
+      send3d({
+        params: { height, roofAngle, wall: wallThickness, floors },
+        colors: {
+          roofColorIdx: roofSelected,
+          facadeColorIdx: facadeSelected,
+          interiorColorIdx: interiorSelected,
+          windowColorIdx: windowSelected,
+        },
+        view: viewName(activeView),
+      });
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  });
 
   useEffect(() => {
     return () => {
@@ -491,8 +506,22 @@ export default function Configurator() {
                   className="relative rounded-[14px] overflow-hidden flex-1"
                   style={{ background: '#0B0F14', minHeight: 'clamp(300px, 50vw, 520px)' }}
                 >
-                  {/* Three.js canvas — always mounted, shown only in 3D mode */}
-                  <AFrameScene params={sceneParams} onResetRef={handleResetRegister} active={mode === '3d'} />
+                  {/* Self-contained 3D configurator in an iframe */}
+                  {mode === '3d' && (
+                    <iframe
+                      ref={frameRef}
+                      src="/configurator3d.html?embed=1"
+                      title="3D конструктор"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        background: '#0B0F14',
+                      }}
+                    />
+                  )}
 
                   {/* Parallax + floating image with view transitions — photo mode only */}
                   {mode === 'photo' && (
@@ -516,7 +545,6 @@ export default function Configurator() {
                       </button>
                     ))}
                     <button
-                      onClick={() => resetCameraRef.current?.()}
                       className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       title="Сбросить камеру"
                     >
@@ -579,7 +607,10 @@ export default function Configurator() {
                   {VIEW_TABS.map(({ label, icon: Icon }, idx) => (
                     <button
                       key={label}
-                      onClick={() => setActiveView(idx)}
+                      onClick={() => {
+                        setActiveView(idx);
+                        send3d({ view: viewName(idx) });
+                      }}
                       className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
                         idx === activeView ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                       }`}
@@ -608,11 +639,11 @@ export default function Configurator() {
                 </span>
 
                 {[
-                  { label: 'ЦВЕТ КРОВЛИ', colors: ROOF_COLORS, selected: roofSelected, setSelected: setRoofSelected },
-                  { label: 'ЦВЕТ ФАСАДА', colors: FACADE_COLORS, selected: facadeSelected, setSelected: setFacadeSelected },
-                  { label: 'ОТДЕЛКА ВНУТРИ', colors: INTERIOR_COLORS, selected: interiorSelected, setSelected: setInteriorSelected },
-                  { label: 'ЦВЕТ ОКОН', colors: WINDOW_COLORS, selected: windowSelected, setSelected: setWindowSelected },
-                ].map(({ label, colors, selected, setSelected }) => (
+                  { label: 'ЦВЕТ КРОВЛИ', colors: ROOF_COLORS, selected: roofSelected, setSelected: setRoofSelected, colorKey: 'roofColorIdx' },
+                  { label: 'ЦВЕТ ФАСАДА', colors: FACADE_COLORS, selected: facadeSelected, setSelected: setFacadeSelected, colorKey: 'facadeColorIdx' },
+                  { label: 'ОТДЕЛКА ВНУТРИ', colors: INTERIOR_COLORS, selected: interiorSelected, setSelected: setInteriorSelected, colorKey: 'interiorColorIdx' },
+                  { label: 'ЦВЕТ ОКОН', colors: WINDOW_COLORS, selected: windowSelected, setSelected: setWindowSelected, colorKey: 'windowColorIdx' },
+                ].map(({ label, colors, selected, setSelected, colorKey }) => (
                   <div key={label}>
                     <span
                       className="uppercase text-[#707887] font-semibold block mb-2"
@@ -626,7 +657,10 @@ export default function Configurator() {
                           key={color}
                           color={color}
                           selected={i === selected}
-                          onClick={() => setSelected(i)}
+                          onClick={() => {
+                            setSelected(i);
+                            sendColors({ [colorKey]: i });
+                          }}
                         />
                       ))}
                     </div>
