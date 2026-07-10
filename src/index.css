@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  background-color: #0A0D12;
+  color: #F3F5F8;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: #2A313C;
+  border-radius: 2px;
+  outline: none;
+  width: 100%;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #D9A34A;
+  cursor: pointer;
+  border: 2px solid #D9A34A;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #D9A34A;
+  cursor: pointer;
+  border: 2px solid #D9A34A;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #D9A34A var(--range-progress, 50%), #2A313C var(--range-progress, 50%));
+  border-radius: 2px;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Responsive grids for Configurator and FloorPlanner ── */
+
+/* Configurator: 3-col desktop → narrow at 1024 → single col at 768 */
+.cfg-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 260px 1fr 260px;
+}
+@media (max-width: 1200px) {
+  .cfg-grid {
+    grid-template-columns: 220px 1fr 220px;
+  }
+}
+@media (max-width: 768px) {
+  .cfg-grid {
+    grid-template-columns: 1fr;
+  }
+  .cfg-grid > *:nth-child(1) { order: 1; }
+  .cfg-grid > *:nth-child(2) { order: 2; }
+  .cfg-grid > *:nth-child(3) { order: 3; }
+}
+
+/* FloorPlanner: same column behaviour */
+.fp-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 260px 1fr 260px;
+}
+@media (max-width: 1200px) {
+  .fp-grid {
+    grid-template-columns: 220px 1fr 220px;
+  }
+}
+@media (max-width: 768px) {
+  .fp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+}
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
