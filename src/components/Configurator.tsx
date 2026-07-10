@@ -15,6 +15,7 @@ import {
   Zap,
   Loader2,
   Check,
+  X,
 } from 'lucide-react';
 import AFrameScene, { SceneParams } from './AFrameScene';
 
@@ -24,6 +25,12 @@ const ROOF_COLORS = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
 const FACADE_COLORS = ['#B98A4A', '#2E333B', '#4A505A', '#8A9099'];
 const INTERIOR_COLORS = ['#C89A62', '#A87B4C', '#8A5F38', '#6B4A2C'];
 const WINDOW_COLORS = ['#0F1216', '#2B3138', '#3E454E', '#5A626C'];
+
+const VIEW_TABS = [
+  { label: 'Экстерьер', icon: Home },
+  { label: 'Планировка', icon: LayoutGrid },
+  { label: 'Интерьер', icon: Sofa },
+];
 
 function ColorSwatch({
   color,
@@ -123,10 +130,149 @@ function Toast({ visible }: { visible: boolean }) {
   );
 }
 
+// Viewport image with parallax + float + view-tab transitions + fullscreen
+function ViewportImage({ activeView, onMaximize }: { activeView: number; onMaximize: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [floating, setFloating] = useState(0);
+  const [imgVisible, setImgVisible] = useState(true);
+  const [displayedView, setDisplayedView] = useState(activeView);
+  const floatRef = useRef<number>(0);
+  const animRef = useRef<number>(0);
+  const startTime = useRef<number>(Date.now());
+
+  // Float animation
+  useEffect(() => {
+    const animate = () => {
+      const elapsed = (Date.now() - startTime.current) / 1000;
+      const y = Math.sin((elapsed / 6) * 2 * Math.PI) * 6;
+      floatRef.current = y;
+      setFloating(y);
+      animRef.current = requestAnimationFrame(animate);
+    };
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, []);
+
+  // Cross-fade on view change
+  useEffect(() => {
+    setImgVisible(false);
+    const t = setTimeout(() => {
+      setDisplayedView(activeView);
+      setImgVisible(true);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [activeView]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    setTilt({ x: dy * -4, y: dx * 6 });
+  };
+
+  const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
+
+  const getImageSrc = () => {
+    if (displayedView === 1) return '/images/plan-1.jpg';
+    return '/images/model-fallback.jpg';
+  };
+
+  const getImageStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      transition: 'transform 150ms ease-out, opacity 200ms ease',
+      transformOrigin: displayedView === 2 ? '55% 65%' : 'center center',
+      transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${floating}px) scale(${displayedView === 2 ? 1.8 : 1})`,
+      opacity: imgVisible ? 1 : 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover' as const,
+    };
+    return base;
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ cursor: 'default' }}
+    >
+      <img
+        src={getImageSrc()}
+        alt="A-Frame модель"
+        style={getImageStyle()}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
+      />
+      {/* Maximize button overlay area — click handled by parent button */}
+      <button
+        onClick={onMaximize}
+        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-lg text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200 pointer-events-auto"
+        style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <Maximize size={15} strokeWidth={1.5} />
+      </button>
+    </div>
+  );
+}
+
+function FullscreenOverlay({
+  activeView,
+  onClose,
+}: {
+  activeView: number;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const src = activeView === 1 ? '/images/plan-1.jpg' : '/images/model-fallback.jpg';
+  const scale = activeView === 2 ? 1.8 : 1;
+  const origin = activeView === 2 ? '55% 65%' : 'center center';
+
+  return (
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center"
+      style={{ background: 'rgba(10,13,18,0.96)' }}
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-white transition-colors duration-200"
+        style={{ background: 'rgba(255,255,255,0.08)' }}
+      >
+        <X size={18} strokeWidth={1.5} />
+      </button>
+      <img
+        src={src}
+        alt="A-Frame модель"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxHeight: '90vh',
+          maxWidth: '90vw',
+          objectFit: 'contain',
+          transform: `scale(${scale})`,
+          transformOrigin: origin,
+          borderRadius: '12px',
+        }}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+      />
+    </div>
+  );
+}
+
 export default function Configurator() {
   const [activeTab, setActiveTab] = useState(0);
+  const [activeView, setActiveView] = useState(0); // 0=Экстерьер, 1=Планировка, 2=Интерьер
+  const [fullscreen, setFullscreen] = useState(false);
 
-  // UI (pending) params — what the sliders show
   const [floors, setFloors] = useState<1 | 2>(1);
   const [height, setHeight] = useState(8.0);
   const [roofAngle, setRoofAngle] = useState(60);
@@ -136,7 +282,6 @@ export default function Configurator() {
   const [interiorSelected, setInteriorSelected] = useState(0);
   const [windowSelected, setWindowSelected] = useState(0);
 
-  // scene params — only update on ПРИМЕНИТЬ
   const [sceneParams, setSceneParams] = useState<SceneParams>({
     height: 8.0,
     roofAngle: 60,
@@ -149,7 +294,6 @@ export default function Configurator() {
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // camera reset callback registered by AFrameScene
   const resetCameraRef = useRef<(() => void) | null>(null);
   const handleResetRegister = useCallback((fn: () => void) => {
     resetCameraRef.current = fn;
@@ -350,6 +494,9 @@ export default function Configurator() {
                   {/* Three.js canvas */}
                   <AFrameScene params={sceneParams} onResetRef={handleResetRegister} />
 
+                  {/* Parallax + floating image with view transitions */}
+                  <ViewportImage activeView={activeView} onMaximize={() => setFullscreen(true)} />
+
                   {/* Top-left toolbar */}
                   <div
                     className="absolute top-4 left-4 flex items-center gap-1 rounded-full px-2 py-1.5 pointer-events-auto"
@@ -375,14 +522,8 @@ export default function Configurator() {
                     </button>
                   </div>
 
-                  {/* Top-right controls */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
-                    <button
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
-                      style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
-                    >
-                      <Maximize size={15} strokeWidth={1.5} />
-                    </button>
+                  {/* Top-right controls (Camera + Globe only; Maximize is inside ViewportImage) */}
+                  <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto" style={{ paddingTop: '44px' }}>
                     <button
                       className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -417,18 +558,15 @@ export default function Configurator() {
                   >
                     ВИДЫ
                   </div>
-                  {[
-                    { label: 'Экстерьер', icon: Home },
-                    { label: 'Планировка', icon: LayoutGrid },
-                    { label: 'Интерьер', icon: Sofa },
-                  ].map(({ label, icon: Icon }, idx) => (
+                  {VIEW_TABS.map(({ label, icon: Icon }, idx) => (
                     <button
                       key={label}
+                      onClick={() => setActiveView(idx)}
                       className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
-                        idx === 0 ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
+                        idx === activeView ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                       }`}
                       style={{
-                        border: idx === 0 ? '1px solid #D9A34A' : '1px solid transparent',
+                        border: idx === activeView ? '1px solid #D9A34A' : '1px solid transparent',
                         margin: '0 2px',
                       }}
                     >
@@ -498,6 +636,10 @@ export default function Configurator() {
       </section>
 
       <Toast visible={toastVisible} />
+
+      {fullscreen && (
+        <FullscreenOverlay activeView={activeView} onClose={() => setFullscreen(false)} />
+      )}
     </>
   );
 }
