@@ -1,10 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-
-// Three.js + OrbitControls are loaded via CDN <script> tags in index.html.
-// Bolt WebContainer cannot resolve the 'three' npm package in the dev server,
-// so we consume the UMD globals that the CDN exposes on window.THREE.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getThree = (): any => (window as any).THREE;
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const ROOF_COLORS = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
 const FACADE_COLORS = ['#B98A4A', '#2E333B', '#4A505A', '#8A9099'];
@@ -30,8 +26,7 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRoofGeo(peak: number, THREE: any) {
+function buildRoofGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([
     -HW, 0, -HD,  -HW, 0,  HD,   0, peak,  HD,
@@ -46,8 +41,7 @@ function buildRoofGeo(peak: number, THREE: any) {
   return geo;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildGableGeo(peak: number, THREE: any) {
+function buildGableGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([-HW, 0, 0,  HW, 0, 0,  0, peak, 0]);
   geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
@@ -80,20 +74,32 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
 
   useEffect(() => { onResetRef?.(resetCamera); }, [onResetRef, resetCamera]);
 
+  // Fix: when container becomes visible after being display:none,
+  // renderer has 0×0 size — resize it to the actual element dimensions.
+  useEffect(() => {
+    if (!active) return;
+    const s = st.current;
+    const mount = mountRef.current;
+    if (!s.renderer || !mount) return;
+    const w = mount.clientWidth;
+    const h = mount.clientHeight;
+    if (w === 0 || h === 0) return;
+    s.renderer.setSize(w, h);
+    if (s.camera) {
+      s.camera.aspect = w / h;
+      s.camera.updateProjectionMatrix();
+    }
+  }, [active]);
+
   useEffect(() => {
     if (!mountRef.current) return;
     const mount = mountRef.current;
     const s = st.current;
 
     try {
-      const THREE = getThree();
-      if (!THREE) throw new Error('THREE not loaded');
-      const OrbitControls = THREE.OrbitControls;
-      if (!OrbitControls) throw new Error('OrbitControls not loaded');
-
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      renderer.setSize(mount.clientWidth || 1, mount.clientHeight || 1);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.setClearColor(0x0b0f14);
@@ -103,7 +109,12 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(0x0b0f14, 18, 32);
 
-      const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 100);
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        (mount.clientWidth || 1) / (mount.clientHeight || 1),
+        0.1,
+        100,
+      );
       camera.position.set(6, 5, 8);
       s.camera = camera;
 
@@ -167,7 +178,7 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         roughness: 0.75, metalness: 0.25, side: THREE.DoubleSide,
       });
       s.roofMat = roofMat;
-      const roofMesh = new THREE.Mesh(buildRoofGeo(initPeak, THREE), roofMat);
+      const roofMesh = new THREE.Mesh(buildRoofGeo(initPeak), roofMat);
       roofMesh.castShadow = true;
       roofMesh.receiveShadow = true;
       scene.add(roofMesh);
@@ -180,16 +191,16 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       });
 
       const frontGableMat = makeGableMat();
-      const backGableMat = makeGableMat();
+      const backGableMat  = makeGableMat();
       s.frontGableMat = frontGableMat;
-      s.backGableMat = backGableMat;
+      s.backGableMat  = backGableMat;
 
-      const frontGable = new THREE.Mesh(buildGableGeo(initPeak, THREE), frontGableMat);
+      const frontGable = new THREE.Mesh(buildGableGeo(initPeak), frontGableMat);
       frontGable.position.set(0, 0, HD + 0.01);
       scene.add(frontGable);
       s.frontGable = frontGable;
 
-      const backGable = new THREE.Mesh(buildGableGeo(initPeak, THREE), backGableMat);
+      const backGable = new THREE.Mesh(buildGableGeo(initPeak), backGableMat);
       backGable.position.set(0, 0, -HD - 0.01);
       backGable.rotation.y = Math.PI;
       scene.add(backGable);
@@ -218,12 +229,12 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         const peak = peakY(s.live.angle);
 
         s.roofMesh.geometry.dispose();
-        s.roofMesh.geometry = buildRoofGeo(peak, THREE);
+        s.roofMesh.geometry = buildRoofGeo(peak);
         s.frontGable.geometry.dispose();
-        s.frontGable.geometry = buildGableGeo(peak, THREE);
+        s.frontGable.geometry = buildGableGeo(peak);
         s.frontGable.position.set(0, 0, HD + 0.01);
         s.backGable.geometry.dispose();
-        s.backGable.geometry = buildGableGeo(peak, THREE);
+        s.backGable.geometry = buildGableGeo(peak);
         s.backGable.position.set(0, 0, -HD - 0.01);
 
         s.roofMat.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), t);
@@ -249,9 +260,12 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
 
       const ro = new ResizeObserver(() => {
         if (!mount) return;
-        camera.aspect = mount.clientWidth / mount.clientHeight;
+        const w = mount.clientWidth;
+        const h = mount.clientHeight;
+        if (w === 0 || h === 0) return;
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        renderer.setSize(mount.clientWidth, mount.clientHeight);
+        renderer.setSize(w, h);
       });
       ro.observe(mount);
 
@@ -261,7 +275,8 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         renderer.dispose();
         if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       };
-    } catch {
+    } catch (err) {
+      console.error('AFrameScene init failed:', err);
       setSceneFailed(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
