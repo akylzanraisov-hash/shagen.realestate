@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+// Three.js and OrbitControls are loaded via CDN scripts in index.html
+/* global THREE */
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ROOF_COLORS = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
@@ -19,6 +20,9 @@ export interface SceneParams {
   facadeColorIdx: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const T = () => (window as any).THREE as any;
+
 function peakY(roofAngle: number) {
   return Math.tan((roofAngle * Math.PI) / 180) * HW;
 }
@@ -28,17 +32,14 @@ function lerpN(a: number, b: number, t: number) {
 }
 
 function buildRoofGeo(peak: number) {
+  const THREE = T();
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([
-    // left slope
     -HW, 0, -HD,  -HW, 0,  HD,   0, peak,  HD,
     -HW, 0, -HD,   0, peak,  HD,  0, peak, -HD,
-    // right slope
      HW, 0, -HD,   0, peak, -HD,  0, peak,  HD,
      HW, 0, -HD,   0, peak,  HD,  HW, 0,  HD,
-    // front gable cap
     -HW, 0,  HD,   HW, 0,  HD,   0, peak,  HD,
-    // back gable cap
     -HW, 0, -HD,   0, peak, -HD,  HW, 0, -HD,
   ]);
   geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
@@ -47,6 +48,7 @@ function buildRoofGeo(peak: number) {
 }
 
 function buildGableGeo(peak: number) {
+  const THREE = T();
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([-HW, 0, 0,  HW, 0, 0,  0, peak, 0]);
   geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
@@ -64,19 +66,20 @@ export default function AFrameScene({ params, onResetRef }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [initFailed, setInitFailed] = useState(false);
 
-  const stateRef = useRef({
-    renderer: null as THREE.WebGLRenderer | null,
-    scene: null as THREE.Scene | null,
-    camera: null as THREE.PerspectiveCamera | null,
-    controls: null as OrbitControls | null,
-    roofMesh: null as THREE.Mesh | null,
-    frontGable: null as THREE.Mesh | null,
-    backGable: null as THREE.Mesh | null,
-    roofMat: null as THREE.MeshStandardMaterial | null,
-    frontGableMat: null as THREE.MeshPhysicalMaterial | null,
-    backGableMat: null as THREE.MeshPhysicalMaterial | null,
-    floorPlate: null as THREE.Mesh | null,
-    innerLight2: null as THREE.PointLight | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stateRef = useRef<any>({
+    renderer: null,
+    scene: null,
+    camera: null,
+    controls: null,
+    roofMesh: null,
+    frontGable: null,
+    backGable: null,
+    roofMat: null,
+    frontGableMat: null,
+    backGableMat: null,
+    floorPlate: null,
+    innerLight2: null,
     animId: 0,
     live: { angle: params.roofAngle },
   });
@@ -102,7 +105,13 @@ export default function AFrameScene({ params, onResetRef }: Props) {
     const s = stateRef.current;
 
     try {
-      // ── renderer ────────────────────────────────────────────────────────────
+      const THREE = T();
+      if (!THREE) throw new Error('THREE not loaded');
+
+      const OrbitControls = THREE.OrbitControls;
+      if (!OrbitControls) throw new Error('OrbitControls not loaded');
+
+      // ── renderer ───────────────────────────────────────────────────────────
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -112,7 +121,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       mount.appendChild(renderer.domElement);
       s.renderer = renderer;
 
-      // ── scene / camera ──────────────────────────────────────────────────────
+      // ── scene / camera ─────────────────────────────────────────────────────
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(0x0a0d12, 16, 30);
       s.scene = scene;
@@ -121,7 +130,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       camera.position.set(6, 5, 8);
       s.camera = camera;
 
-      // ── controls ────────────────────────────────────────────────────────────
+      // ── controls ───────────────────────────────────────────────────────────
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 1, 0);
       controls.minPolarAngle = Math.PI / 8;
@@ -133,7 +142,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       controls.update();
       s.controls = controls;
 
-      // ── lights ──────────────────────────────────────────────────────────────
+      // ── lights ─────────────────────────────────────────────────────────────
       scene.add(new THREE.AmbientLight(0x98b8d8, 0.15));
 
       const dirLight = new THREE.DirectionalLight(0xb8cce0, 0.35);
@@ -158,7 +167,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       scene.add(innerLight2);
       s.innerLight2 = innerLight2;
 
-      // ── ground / base ────────────────────────────────────────────────────────
+      // ── ground / base ──────────────────────────────────────────────────────
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(W + 5, D + 5),
         new THREE.MeshStandardMaterial({ color: 0x182010, roughness: 1 }),
@@ -176,7 +185,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       base.receiveShadow = true;
       scene.add(base);
 
-      // ── roof ────────────────────────────────────────────────────────────────
+      // ── roof ───────────────────────────────────────────────────────────────
       const initPeak = peakY(params.roofAngle);
 
       const roofMat = new THREE.MeshStandardMaterial({
@@ -193,7 +202,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       scene.add(roofMesh);
       s.roofMesh = roofMesh;
 
-      // ── gables ──────────────────────────────────────────────────────────────
+      // ── gables ─────────────────────────────────────────────────────────────
       const makeGableMat = () =>
         new THREE.MeshPhysicalMaterial({
           color: new THREE.Color(FACADE_COLORS[params.facadeColorIdx]),
@@ -222,7 +231,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       scene.add(backGable);
       s.backGable = backGable;
 
-      // ── terrace ──────────────────────────────────────────────────────────────
+      // ── terrace ────────────────────────────────────────────────────────────
       const terraceMat = new THREE.MeshStandardMaterial({ color: 0x5c3d22, roughness: 0.88 });
       const terrace = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, 0.14, 2.6), terraceMat);
       terrace.position.set(0, 0.07, HD + 1.4);
@@ -231,13 +240,13 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       scene.add(terrace);
 
       const plankMat = new THREE.MeshStandardMaterial({ color: 0x3d2610 });
-      [-0.9, -0.3, 0.3, 0.9].forEach((z) => {
+      [-0.9, -0.3, 0.3, 0.9].forEach((z: number) => {
         const plank = new THREE.Mesh(new THREE.BoxGeometry(W - 0.5, 0.02, 0.05), plankMat);
         plank.position.set(0, 0.145, HD + 1.4 + z * 0.65);
         scene.add(plank);
       });
 
-      // ── 2nd floor plate ──────────────────────────────────────────────────────
+      // ── 2nd floor plate ────────────────────────────────────────────────────
       const floorPlate = new THREE.Mesh(
         new THREE.BoxGeometry(W - 0.08, 0.14, D - 0.08),
         new THREE.MeshStandardMaterial({ color: 0x1a130a, roughness: 0.9 }),
@@ -249,7 +258,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       scene.add(floorPlate);
       s.floorPlate = floorPlate;
 
-      // ── animation loop ────────────────────────────────────────────────────────
+      // ── animation loop ─────────────────────────────────────────────────────
       let last = performance.now();
       function animate() {
         s.animId = requestAnimationFrame(animate);
@@ -263,32 +272,32 @@ export default function AFrameScene({ params, onResetRef }: Props) {
         s.live.angle = lerpN(s.live.angle, p.roofAngle, lerpT);
         const peak = peakY(s.live.angle);
 
-        s.roofMesh!.geometry.dispose();
-        s.roofMesh!.geometry = buildRoofGeo(peak);
+        s.roofMesh.geometry.dispose();
+        s.roofMesh.geometry = buildRoofGeo(peak);
 
-        s.frontGable!.geometry.dispose();
-        s.frontGable!.geometry = buildGableGeo(peak);
-        s.frontGable!.position.set(0, 0, HD + 0.01);
+        s.frontGable.geometry.dispose();
+        s.frontGable.geometry = buildGableGeo(peak);
+        s.frontGable.position.set(0, 0, HD + 0.01);
 
-        s.backGable!.geometry.dispose();
-        s.backGable!.geometry = buildGableGeo(peak);
-        s.backGable!.position.set(0, 0, -HD - 0.01);
+        s.backGable.geometry.dispose();
+        s.backGable.geometry = buildGableGeo(peak);
+        s.backGable.position.set(0, 0, -HD - 0.01);
 
-        s.roofMat!.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), lerpT);
+        s.roofMat.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), lerpT);
         const facadeCol = new THREE.Color(FACADE_COLORS[p.facadeColorIdx]);
-        s.frontGableMat!.color.lerp(facadeCol, lerpT);
-        s.backGableMat!.color.lerp(facadeCol, lerpT);
+        s.frontGableMat.color.lerp(facadeCol, lerpT);
+        s.backGableMat.color.lerp(facadeCol, lerpT);
 
         if (p.floors === 2) {
-          s.floorPlate!.visible = true;
+          s.floorPlate.visible = true;
           const targetY = peak * 0.48;
-          s.floorPlate!.position.y = lerpN(s.floorPlate!.position.y, targetY, lerpT * 1.5);
-          s.innerLight2!.intensity = lerpN(s.innerLight2!.intensity, 2, lerpT);
-          s.innerLight2!.position.y = peak * 0.65;
+          s.floorPlate.position.y = lerpN(s.floorPlate.position.y, targetY, lerpT * 1.5);
+          s.innerLight2.intensity = lerpN(s.innerLight2.intensity, 2, lerpT);
+          s.innerLight2.position.y = peak * 0.65;
         } else {
-          s.floorPlate!.position.y = lerpN(s.floorPlate!.position.y, -50, lerpT * 1.5);
-          if (s.floorPlate!.position.y < -10) s.floorPlate!.visible = false;
-          s.innerLight2!.intensity = lerpN(s.innerLight2!.intensity, 0, lerpT);
+          s.floorPlate.position.y = lerpN(s.floorPlate.position.y, -50, lerpT * 1.5);
+          if (s.floorPlate.position.y < -10) s.floorPlate.visible = false;
+          s.innerLight2.intensity = lerpN(s.innerLight2.intensity, 0, lerpT);
         }
 
         controls.update();
@@ -296,7 +305,7 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       }
       animate();
 
-      // ── resize ────────────────────────────────────────────────────────────────
+      // ── resize ─────────────────────────────────────────────────────────────
       const onResize = () => {
         if (!mount) return;
         camera.aspect = mount.clientWidth / mount.clientHeight;
