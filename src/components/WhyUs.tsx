@@ -1,11 +1,11 @@
 import { Clock, Blocks, BadgeCheck, ClipboardCheck, LifeBuoy } from 'lucide-react';
 
 const stats = [
-  { icon: Clock, value: '10+', label: 'ЛЕТ ОПЫТА', valueGold: false },
-  { icon: Blocks, value: '500+', label: 'РЕАЛИЗОВАННЫХ\nПРОЕКТОВ', valueGold: false },
-  { icon: BadgeCheck, value: 'ГАРАНТИЯ', label: 'ДО 10 ЛЕТ', valueGold: true },
-  { icon: ClipboardCheck, value: 'ПОД КЛЮЧ', label: 'ОТ ПРОЕКТА ДО СДАЧИ', valueGold: true },
-  { icon: LifeBuoy, value: 'ПОДДЕРЖКА', label: 'НА ВСЕХ ЭТАПАХ', valueGold: true },
+  { icon: Clock, value: '10+', label: 'ЛЕТ ОПЫТА' },
+  { icon: Blocks, value: '500+', label: 'РЕАЛИЗОВАННЫХ\nПРОЕКТОВ' },
+  { icon: BadgeCheck, value: 'ГАРАНТИЯ', label: 'ДО 10 ЛЕТ' },
+  { icon: ClipboardCheck, value: 'ПОД КЛЮЧ', label: 'ОТ ПРОЕКТА ДО СДАЧИ' },
+  { icon: LifeBuoy, value: 'ПОДДЕРЖКА', label: 'НА ВСЕХ ЭТАПАХ' },
 ];
 
 export default function WhyUs() {
@@ -22,7 +22,7 @@ export default function WhyUs() {
 
         {/* Desktop: single row; tablet/mobile: wrap 2-per-row */}
         <div className="flex flex-wrap justify-center lg:justify-between gap-6">
-          {stats.map(({ icon: Icon, value, label, valueGold }, i) => (
+          {stats.map(({ icon: Icon, value, label }, i) => (
             <div key={i} className="flex items-center gap-4 w-full sm:w-[calc(50%-12px)] lg:w-auto lg:flex-1">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
@@ -33,7 +33,7 @@ export default function WhyUs() {
               <div className="flex flex-col gap-1">
                 <span
                   className="font-bold leading-tight"
-                  style={{ fontSize: '20px', color: valueGold ? '#D9A34A' : '#F3F5F8' }}
+                  style={{ fontSize: '20px', color: '#F3F5F8' }}
                 >
                   {value}
                 </span>

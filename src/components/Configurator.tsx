@@ -210,7 +210,7 @@ export default function Configurator() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(i)}
-                  className={`flex-1 h-full text-center uppercase font-semibold relative transition-colors duration-200 ${
+                  className={`flex-1 h-full text-center uppercase font-semibold relative transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
                     i === activeTab ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                   }`}
                   style={{ fontSize: '11px', letterSpacing: '0.1em' }}
@@ -279,7 +279,7 @@ export default function Configurator() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setFloors(1)}
-                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200"
+                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
                       style={{
                         background: floors === 1 ? 'rgba(217,163,74,0.08)' : '#151B24',
                         border: floors === 1 ? '1px solid #D9A34A' : '1px solid rgba(255,255,255,0.08)',
@@ -290,7 +290,7 @@ export default function Configurator() {
                     </button>
                     <button
                       onClick={() => setFloors(2)}
-                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200"
+                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
                       style={{
                         background: floors === 2 ? 'rgba(217,163,74,0.08)' : '#151B24',
                         border: floors === 2 ? '1px solid #D9A34A' : '1px solid rgba(255,255,255,0.08)',
@@ -424,7 +424,7 @@ export default function Configurator() {
                   ].map(({ label, icon: Icon }, idx) => (
                     <button
                       key={label}
-                      className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 ${
+                      className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
                         idx === 0 ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                       }`}
                       style={{

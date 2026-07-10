@@ -1,7 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
-
-// Three.js and OrbitControls are loaded via CDN script tags in index.html
-declare const THREE: any;
+import { useEffect, useRef, useCallback, useState } from 'react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ROOF_COLORS = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
@@ -28,7 +27,7 @@ function lerpN(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function buildRoofGeo(THREE: any, peak: number) {
+function buildRoofGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([
     // left slope
@@ -47,7 +46,7 @@ function buildRoofGeo(THREE: any, peak: number) {
   return geo;
 }
 
-function buildGableGeo(THREE: any, peak: number) {
+function buildGableGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([-HW, 0, 0,  HW, 0, 0,  0, peak, 0]);
   geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
@@ -63,21 +62,21 @@ interface Props {
 
 export default function AFrameScene({ params, onResetRef }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const [initFailed, setInitFailed] = useState(false);
 
-  // refs for scene objects we animate each frame
   const stateRef = useRef({
-    renderer: null as any,
-    scene: null as any,
-    camera: null as any,
-    controls: null as any,
-    roofMesh: null as any,
-    frontGable: null as any,
-    backGable: null as any,
-    roofMat: null as any,
-    frontGableMat: null as any,
-    backGableMat: null as any,
-    floorPlate: null as any,
-    innerLight2: null as any,
+    renderer: null as THREE.WebGLRenderer | null,
+    scene: null as THREE.Scene | null,
+    camera: null as THREE.PerspectiveCamera | null,
+    controls: null as OrbitControls | null,
+    roofMesh: null as THREE.Mesh | null,
+    frontGable: null as THREE.Mesh | null,
+    backGable: null as THREE.Mesh | null,
+    roofMat: null as THREE.MeshStandardMaterial | null,
+    frontGableMat: null as THREE.MeshPhysicalMaterial | null,
+    backGableMat: null as THREE.MeshPhysicalMaterial | null,
+    floorPlate: null as THREE.Mesh | null,
+    innerLight2: null as THREE.PointLight | null,
     animId: 0,
     live: { angle: params.roofAngle },
   });
@@ -98,34 +97,32 @@ export default function AFrameScene({ params, onResetRef }: Props) {
   }, [onResetRef, resetCamera]);
 
   useEffect(() => {
-    if (!mountRef.current || typeof THREE === 'undefined') return;
+    if (!mountRef.current) return;
     const mount = mountRef.current;
     const s = stateRef.current;
 
-    // ── renderer ──────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setClearColor(0x0a0d12);
-    mount.appendChild(renderer.domElement);
-    s.renderer = renderer;
+    try {
+      // ── renderer ────────────────────────────────────────────────────────────
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.setClearColor(0x0a0d12);
+      mount.appendChild(renderer.domElement);
+      s.renderer = renderer;
 
-    // ── scene / camera ────────────────────────────────────────────────────────
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0a0d12, 16, 30);
-    s.scene = scene;
+      // ── scene / camera ──────────────────────────────────────────────────────
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0x0a0d12, 16, 30);
+      s.scene = scene;
 
-    const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 100);
-    camera.position.set(6, 5, 8);
-    s.camera = camera;
+      const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 100);
+      camera.position.set(6, 5, 8);
+      s.camera = camera;
 
-    // ── controls ──────────────────────────────────────────────────────────────
-    const OrbitControls = (THREE as any).OrbitControls ?? (window as any).THREE?.OrbitControls;
-    let controls: any = null;
-    if (OrbitControls) {
-      controls = new OrbitControls(camera, renderer.domElement);
+      // ── controls ────────────────────────────────────────────────────────────
+      const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 1, 0);
       controls.minPolarAngle = Math.PI / 8;
       controls.maxPolarAngle = Math.PI / 2.1;
@@ -133,194 +130,203 @@ export default function AFrameScene({ params, onResetRef }: Props) {
       controls.maxDistance = 18;
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.autoRotate = false;
       controls.update();
       s.controls = controls;
-    }
 
-    // ── lights ────────────────────────────────────────────────────────────────
-    const ambient = new THREE.AmbientLight(0x98b8d8, 0.15);
-    scene.add(ambient);
+      // ── lights ──────────────────────────────────────────────────────────────
+      scene.add(new THREE.AmbientLight(0x98b8d8, 0.15));
 
-    const dirLight = new THREE.DirectionalLight(0xb8cce0, 0.35);
-    dirLight.position.set(-5, 10, 5);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.set(1024, 1024);
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 35;
-    dirLight.shadow.camera.left = -10;
-    dirLight.shadow.camera.right = 10;
-    dirLight.shadow.camera.top = 10;
-    dirLight.shadow.camera.bottom = -10;
-    scene.add(dirLight);
+      const dirLight = new THREE.DirectionalLight(0xb8cce0, 0.35);
+      dirLight.position.set(-5, 10, 5);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.set(1024, 1024);
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 35;
+      dirLight.shadow.camera.left = -10;
+      dirLight.shadow.camera.right = 10;
+      dirLight.shadow.camera.top = 10;
+      dirLight.shadow.camera.bottom = -10;
+      scene.add(dirLight);
 
-    const innerLight = new THREE.PointLight(0xe7b257, 4, 9);
-    innerLight.position.set(0, 1.0, 0);
-    innerLight.castShadow = true;
-    scene.add(innerLight);
+      const innerLight = new THREE.PointLight(0xe7b257, 4, 9);
+      innerLight.position.set(0, 1.0, 0);
+      innerLight.castShadow = true;
+      scene.add(innerLight);
 
-    const innerLight2 = new THREE.PointLight(0xe7b257, 0, 6);
-    innerLight2.position.set(0, 3, 0);
-    scene.add(innerLight2);
-    s.innerLight2 = innerLight2;
+      const innerLight2 = new THREE.PointLight(0xe7b257, 0, 6);
+      innerLight2.position.set(0, 3, 0);
+      scene.add(innerLight2);
+      s.innerLight2 = innerLight2;
 
-    // ── ground / base ─────────────────────────────────────────────────────────
-    const groundGeo = new THREE.PlaneGeometry(W + 5, D + 5);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x182010, roughness: 1 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.01;
-    ground.receiveShadow = true;
-    scene.add(ground);
+      // ── ground / base ────────────────────────────────────────────────────────
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(W + 5, D + 5),
+        new THREE.MeshStandardMaterial({ color: 0x182010, roughness: 1 }),
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.01;
+      ground.receiveShadow = true;
+      scene.add(ground);
 
-    const baseGeo = new THREE.BoxGeometry(W + 0.4, 0.3, D + 0.4);
-    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a1810, roughness: 0.85 });
-    const base = new THREE.Mesh(baseGeo, baseMat);
-    base.position.y = -0.15;
-    base.receiveShadow = true;
-    scene.add(base);
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(W + 0.4, 0.3, D + 0.4),
+        new THREE.MeshStandardMaterial({ color: 0x1a1810, roughness: 0.85 }),
+      );
+      base.position.y = -0.15;
+      base.receiveShadow = true;
+      scene.add(base);
 
-    // ── roof ──────────────────────────────────────────────────────────────────
-    const initPeak = peakY(params.roofAngle);
+      // ── roof ────────────────────────────────────────────────────────────────
+      const initPeak = peakY(params.roofAngle);
 
-    const roofMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(ROOF_COLORS[params.roofColorIdx]),
-      roughness: 0.75,
-      metalness: 0.25,
-      side: THREE.DoubleSide,
-    });
-    s.roofMat = roofMat;
-
-    const roofMesh = new THREE.Mesh(buildRoofGeo(THREE, initPeak), roofMat);
-    roofMesh.castShadow = true;
-    roofMesh.receiveShadow = true;
-    scene.add(roofMesh);
-    s.roofMesh = roofMesh;
-
-    // ── gables ────────────────────────────────────────────────────────────────
-    const makeGableMat = () =>
-      new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(FACADE_COLORS[params.facadeColorIdx]),
-        transparent: true,
-        opacity: 0.5,
-        roughness: 0.04,
-        transmission: 0.65,
-        emissive: new THREE.Color(0xe7b257),
-        emissiveIntensity: 0.3,
+      const roofMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(ROOF_COLORS[params.roofColorIdx]),
+        roughness: 0.75,
+        metalness: 0.25,
         side: THREE.DoubleSide,
       });
+      s.roofMat = roofMat;
 
-    const frontGableMat = makeGableMat();
-    const backGableMat = makeGableMat();
-    s.frontGableMat = frontGableMat;
-    s.backGableMat = backGableMat;
+      const roofMesh = new THREE.Mesh(buildRoofGeo(initPeak), roofMat);
+      roofMesh.castShadow = true;
+      roofMesh.receiveShadow = true;
+      scene.add(roofMesh);
+      s.roofMesh = roofMesh;
 
-    const frontGable = new THREE.Mesh(buildGableGeo(THREE, initPeak), frontGableMat);
-    frontGable.position.set(0, 0, HD + 0.01);
-    scene.add(frontGable);
-    s.frontGable = frontGable;
+      // ── gables ──────────────────────────────────────────────────────────────
+      const makeGableMat = () =>
+        new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color(FACADE_COLORS[params.facadeColorIdx]),
+          transparent: true,
+          opacity: 0.5,
+          roughness: 0.04,
+          transmission: 0.65,
+          emissive: new THREE.Color(0xe7b257),
+          emissiveIntensity: 0.3,
+          side: THREE.DoubleSide,
+        });
 
-    const backGable = new THREE.Mesh(buildGableGeo(THREE, initPeak), backGableMat);
-    backGable.position.set(0, 0, -HD - 0.01);
-    backGable.rotation.y = Math.PI;
-    scene.add(backGable);
-    s.backGable = backGable;
+      const frontGableMat = makeGableMat();
+      const backGableMat = makeGableMat();
+      s.frontGableMat = frontGableMat;
+      s.backGableMat = backGableMat;
 
-    // ── terrace ───────────────────────────────────────────────────────────────
-    const terraceMat = new THREE.MeshStandardMaterial({ color: 0x5c3d22, roughness: 0.88 });
-    const terrace = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, 0.14, 2.6), terraceMat);
-    terrace.position.set(0, 0.07, HD + 1.4);
-    terrace.castShadow = true;
-    terrace.receiveShadow = true;
-    scene.add(terrace);
+      const frontGable = new THREE.Mesh(buildGableGeo(initPeak), frontGableMat);
+      frontGable.position.set(0, 0, HD + 0.01);
+      scene.add(frontGable);
+      s.frontGable = frontGable;
 
-    // plank lines
-    const plankMat = new THREE.MeshStandardMaterial({ color: 0x3d2610 });
-    [-0.9, -0.3, 0.3, 0.9].forEach((z) => {
-      const plank = new THREE.Mesh(new THREE.BoxGeometry(W - 0.5, 0.02, 0.05), plankMat);
-      plank.position.set(0, 0.145, HD + 1.4 + z * 0.65);
-      scene.add(plank);
-    });
+      const backGable = new THREE.Mesh(buildGableGeo(initPeak), backGableMat);
+      backGable.position.set(0, 0, -HD - 0.01);
+      backGable.rotation.y = Math.PI;
+      scene.add(backGable);
+      s.backGable = backGable;
 
-    // ── 2nd floor plate ───────────────────────────────────────────────────────
-    const floorPlateMat = new THREE.MeshStandardMaterial({ color: 0x1a130a, roughness: 0.9 });
-    const floorPlate = new THREE.Mesh(new THREE.BoxGeometry(W - 0.08, 0.14, D - 0.08), floorPlateMat);
-    floorPlate.position.y = -50;
-    floorPlate.visible = false;
-    floorPlate.castShadow = true;
-    floorPlate.receiveShadow = true;
-    scene.add(floorPlate);
-    s.floorPlate = floorPlate;
+      // ── terrace ──────────────────────────────────────────────────────────────
+      const terraceMat = new THREE.MeshStandardMaterial({ color: 0x5c3d22, roughness: 0.88 });
+      const terrace = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, 0.14, 2.6), terraceMat);
+      terrace.position.set(0, 0.07, HD + 1.4);
+      terrace.castShadow = true;
+      terrace.receiveShadow = true;
+      scene.add(terrace);
 
-    // ── animation loop ────────────────────────────────────────────────────────
-    let last = performance.now();
-    function animate() {
-      s.animId = requestAnimationFrame(animate);
-      const now = performance.now();
-      const delta = Math.min((now - last) / 1000, 0.1);
-      last = now;
+      const plankMat = new THREE.MeshStandardMaterial({ color: 0x3d2610 });
+      [-0.9, -0.3, 0.3, 0.9].forEach((z) => {
+        const plank = new THREE.Mesh(new THREE.BoxGeometry(W - 0.5, 0.02, 0.05), plankMat);
+        plank.position.set(0, 0.145, HD + 1.4 + z * 0.65);
+        scene.add(plank);
+      });
 
-      const p = paramsRef.current;
-      const lerpT = Math.min(1, delta * 2.2);
+      // ── 2nd floor plate ──────────────────────────────────────────────────────
+      const floorPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(W - 0.08, 0.14, D - 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x1a130a, roughness: 0.9 }),
+      );
+      floorPlate.position.y = -50;
+      floorPlate.visible = false;
+      floorPlate.castShadow = true;
+      floorPlate.receiveShadow = true;
+      scene.add(floorPlate);
+      s.floorPlate = floorPlate;
 
-      s.live.angle = lerpN(s.live.angle, p.roofAngle, lerpT);
-      const peak = peakY(s.live.angle);
+      // ── animation loop ────────────────────────────────────────────────────────
+      let last = performance.now();
+      function animate() {
+        s.animId = requestAnimationFrame(animate);
+        const now = performance.now();
+        const delta = Math.min((now - last) / 1000, 0.1);
+        last = now;
 
-      // rebuild roof
-      s.roofMesh.geometry.dispose();
-      s.roofMesh.geometry = buildRoofGeo(THREE, peak);
+        const p = paramsRef.current;
+        const lerpT = Math.min(1, delta * 2.2);
 
-      // rebuild gables
-      s.frontGable.geometry.dispose();
-      s.frontGable.geometry = buildGableGeo(THREE, peak);
-      s.frontGable.position.set(0, 0, HD + 0.01);
+        s.live.angle = lerpN(s.live.angle, p.roofAngle, lerpT);
+        const peak = peakY(s.live.angle);
 
-      s.backGable.geometry.dispose();
-      s.backGable.geometry = buildGableGeo(THREE, peak);
-      s.backGable.position.set(0, 0, -HD - 0.01);
+        s.roofMesh!.geometry.dispose();
+        s.roofMesh!.geometry = buildRoofGeo(peak);
 
-      // colours
-      s.roofMat.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), lerpT);
-      const facadeCol = new THREE.Color(FACADE_COLORS[p.facadeColorIdx]);
-      s.frontGableMat.color.lerp(facadeCol, lerpT);
-      s.backGableMat.color.lerp(facadeCol, lerpT);
+        s.frontGable!.geometry.dispose();
+        s.frontGable!.geometry = buildGableGeo(peak);
+        s.frontGable!.position.set(0, 0, HD + 0.01);
 
-      // 2nd floor plate
-      if (p.floors === 2) {
-        s.floorPlate.visible = true;
-        const targetY = peak * 0.48;
-        s.floorPlate.position.y = lerpN(s.floorPlate.position.y, targetY, lerpT * 1.5);
-        s.innerLight2.intensity = lerpN(s.innerLight2.intensity, 2, lerpT);
-        s.innerLight2.position.y = peak * 0.65;
-      } else {
-        s.floorPlate.position.y = lerpN(s.floorPlate.position.y, -50, lerpT * 1.5);
-        if (s.floorPlate.position.y < -10) s.floorPlate.visible = false;
-        s.innerLight2.intensity = lerpN(s.innerLight2.intensity, 0, lerpT);
+        s.backGable!.geometry.dispose();
+        s.backGable!.geometry = buildGableGeo(peak);
+        s.backGable!.position.set(0, 0, -HD - 0.01);
+
+        s.roofMat!.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), lerpT);
+        const facadeCol = new THREE.Color(FACADE_COLORS[p.facadeColorIdx]);
+        s.frontGableMat!.color.lerp(facadeCol, lerpT);
+        s.backGableMat!.color.lerp(facadeCol, lerpT);
+
+        if (p.floors === 2) {
+          s.floorPlate!.visible = true;
+          const targetY = peak * 0.48;
+          s.floorPlate!.position.y = lerpN(s.floorPlate!.position.y, targetY, lerpT * 1.5);
+          s.innerLight2!.intensity = lerpN(s.innerLight2!.intensity, 2, lerpT);
+          s.innerLight2!.position.y = peak * 0.65;
+        } else {
+          s.floorPlate!.position.y = lerpN(s.floorPlate!.position.y, -50, lerpT * 1.5);
+          if (s.floorPlate!.position.y < -10) s.floorPlate!.visible = false;
+          s.innerLight2!.intensity = lerpN(s.innerLight2!.intensity, 0, lerpT);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
       }
+      animate();
 
-      controls?.update();
-      renderer.render(scene, camera);
+      // ── resize ────────────────────────────────────────────────────────────────
+      const onResize = () => {
+        if (!mount) return;
+        camera.aspect = mount.clientWidth / mount.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(mount.clientWidth, mount.clientHeight);
+      };
+      const ro = new ResizeObserver(onResize);
+      ro.observe(mount);
+
+      return () => {
+        cancelAnimationFrame(s.animId);
+        ro.disconnect();
+        renderer.dispose();
+        if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      };
+    } catch {
+      setInitFailed(true);
     }
-    animate();
-
-    // ── resize ────────────────────────────────────────────────────────────────
-    const onResize = () => {
-      if (!mount) return;
-      camera.aspect = mount.clientWidth / mount.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
-    };
-    const ro = new ResizeObserver(onResize);
-    ro.observe(mount);
-
-    return () => {
-      cancelAnimationFrame(s.animId);
-      ro.disconnect();
-      renderer.dispose();
-      mount.removeChild(renderer.domElement);
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (initFailed) {
+    return (
+      <img
+        src="/images/model-fallback.jpg"
+        alt="3D модель A-Frame"
+        className="w-full h-full object-cover"
+      />
+    );
+  }
 
   return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
 }

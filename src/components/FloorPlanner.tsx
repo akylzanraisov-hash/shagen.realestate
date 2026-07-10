@@ -189,6 +189,7 @@ function AddRoomModal({
 
 function FloorPlan({
   label,
+  imageSrc,
   rooms,
   active,
   onClick,
@@ -199,6 +200,7 @@ function FloorPlan({
   isDragActive,
 }: {
   label: string;
+  imageSrc: string;
   rooms: { name: string; area: string; top: string; left: string }[];
   active: boolean;
   onClick: () => void;
@@ -290,9 +292,9 @@ function FloorPlan({
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=60"
+          src={imageSrc}
           alt={`${label} планировка`}
-          className="w-full h-full object-cover opacity-30"
+          className="w-full h-full object-cover opacity-90"
           draggable={false}
         />
 
@@ -510,6 +512,7 @@ export default function FloorPlanner() {
               <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
                 <FloorPlan
                   label="1 ЭТАЖ"
+                  imageSrc="/images/plan-1.jpg"
                   rooms={floor1Rooms}
                   active={selectedFloor === 1}
                   onClick={() => setSelectedFloor(1)}
@@ -528,6 +531,7 @@ export default function FloorPlanner() {
 
                 <FloorPlan
                   label="2 ЭТАЖ"
+                  imageSrc="/images/plan-2.jpg"
                   rooms={floor2Rooms}
                   active={selectedFloor === 2}
                   onClick={() => setSelectedFloor(2)}

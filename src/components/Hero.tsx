@@ -13,7 +13,7 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=1920&q=80"
+          src="/images/hero.jpg"
           alt="A-Frame дом ночью"
           className="w-full h-full object-cover object-center"
         />
@@ -39,16 +39,15 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center pt-28 pb-10">
         <div className="max-w-[1280px] mx-auto px-6 w-full">
-          <div className="max-w-[560px]">
-            {/* Title: 34-38px on mobile, 56px on desktop */}
+          <div className="max-w-[680px]">
             <h1
               className="font-extrabold uppercase leading-[1.12] mb-6"
-              style={{ fontSize: 'clamp(34px, 5vw, 56px)' }}
+              style={{ fontSize: 'clamp(32px, 4.2vw, 52px)' }}
             >
-              <span className="text-white block">СТРОИТЕЛЬСТВО</span>
-              <span className="text-white block">КАРКАСНЫХ ДОМОВ</span>
-              <span className="text-white block">ПРЕМИУМ КЛАССА</span>
-              <span style={{ color: '#D9A34A' }} className="block">A-FRAME</span>
+              <span className="text-white block whitespace-nowrap">СТРОИТЕЛЬСТВО</span>
+              <span className="text-white block whitespace-nowrap">КАРКАСНЫХ ДОМОВ</span>
+              <span className="text-white block whitespace-nowrap">ПРЕМИУМ КЛАССА</span>
+              <span style={{ color: '#D9A34A' }} className="block whitespace-nowrap">A-FRAME</span>
             </h1>
 
             <div className="flex items-stretch gap-4 mb-8">

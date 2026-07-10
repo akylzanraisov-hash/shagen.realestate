@@ -14,36 +14,42 @@ body {
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  height: 3px;
-  background: #2A313C;
-  border-radius: 2px;
-  outline: none;
   width: 100%;
+  height: 16px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
 }
-
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #D9A34A var(--range-progress, 50%), #2A313C var(--range-progress, 50%));
+}
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  appearance: none;
   width: 16px;
   height: 16px;
+  margin-top: -6.5px;
   border-radius: 50%;
   background: #D9A34A;
-  cursor: pointer;
-  border: 2px solid #D9A34A;
+  border: 2px solid #0E1218;
 }
-
-input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #D9A34A;
-  cursor: pointer;
-  border: 2px solid #D9A34A;
-}
-
-input[type="range"]::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, #D9A34A var(--range-progress, 50%), #2A313C var(--range-progress, 50%));
+input[type="range"]::-moz-range-track {
+  height: 3px;
   border-radius: 2px;
+  background: #2A313C;
+}
+input[type="range"]::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: #D9A34A;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #D9A34A;
+  border: 2px solid #0E1218;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -87,6 +93,14 @@ input[type="range"]::-webkit-slider-runnable-track {
   .fp-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Remove default focus ring from all interactive elements */
+button:focus,
+button:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible {
+  outline: none;
 }
 
 /* Prevent horizontal overflow globally */
