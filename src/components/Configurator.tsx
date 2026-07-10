@@ -131,7 +131,7 @@ function Toast({ visible }: { visible: boolean }) {
 }
 
 // Viewport image with parallax + float + view-tab transitions + fullscreen
-function ViewportImage({ activeView, onMaximize }: { activeView: number; onMaximize: () => void }) {
+function ViewportImage({ activeView }: { activeView: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [floating, setFloating] = useState(0);
@@ -208,14 +208,6 @@ function ViewportImage({ activeView, onMaximize }: { activeView: number; onMaxim
         style={getImageStyle()}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
       />
-      {/* Maximize button overlay area — click handled by parent button */}
-      <button
-        onClick={onMaximize}
-        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-lg text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200 pointer-events-auto"
-        style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
-      >
-        <Maximize size={15} strokeWidth={1.5} />
-      </button>
     </div>
   );
 }
@@ -272,6 +264,7 @@ export default function Configurator() {
   const [activeTab, setActiveTab] = useState(0);
   const [activeView, setActiveView] = useState(0); // 0=Экстерьер, 1=Планировка, 2=Интерьер
   const [fullscreen, setFullscreen] = useState(false);
+  const [mode, setMode] = useState<'photo' | '3d'>('photo');
 
   const [floors, setFloors] = useState<1 | 2>(1);
   const [height, setHeight] = useState(8.0);
@@ -491,11 +484,13 @@ export default function Configurator() {
                   className="relative rounded-[14px] overflow-hidden flex-1"
                   style={{ background: '#0B0F14', minHeight: 'clamp(300px, 50vw, 520px)' }}
                 >
-                  {/* Three.js canvas */}
-                  <AFrameScene params={sceneParams} onResetRef={handleResetRegister} />
+                  {/* Three.js canvas — always mounted, shown only in 3D mode */}
+                  <AFrameScene params={sceneParams} onResetRef={handleResetRegister} active={mode === '3d'} />
 
-                  {/* Parallax + floating image with view transitions */}
-                  <ViewportImage activeView={activeView} onMaximize={() => setFullscreen(true)} />
+                  {/* Parallax + floating image with view transitions — photo mode only */}
+                  {mode === 'photo' && (
+                    <ViewportImage activeView={activeView} />
+                  )}
 
                   {/* Top-left toolbar */}
                   <div
@@ -522,8 +517,18 @@ export default function Configurator() {
                     </button>
                   </div>
 
-                  {/* Top-right controls (Camera + Globe only; Maximize is inside ViewportImage) */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto" style={{ paddingTop: '44px' }}>
+                  {/* Top-right controls */}
+                  <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
+                    {/* Maximize — only in photo mode (in 3D mode ViewportImage doesn't render it) */}
+                    {mode === 'photo' && (
+                      <button
+                        onClick={() => setFullscreen(true)}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
+                        style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        <Maximize size={15} strokeWidth={1.5} />
+                      </button>
+                    )}
                     <button
                       className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -531,8 +536,14 @@ export default function Configurator() {
                       <Camera size={15} strokeWidth={1.5} />
                     </button>
                     <button
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-[#171006] transition-colors duration-200"
-                      style={{ background: '#D9A34A' }}
+                      onClick={() => setMode(m => m === 'photo' ? '3d' : 'photo')}
+                      className="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200"
+                      style={{
+                        background: mode === '3d' ? '#D9A34A' : 'rgba(14,18,24,0.9)',
+                        border: mode === '3d' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                        color: mode === '3d' ? '#171006' : '#8B93A1',
+                      }}
+                      title={mode === 'photo' ? 'Переключить в 3D' : 'Переключить в Фото'}
                     >
                       <Globe size={15} strokeWidth={1.5} />
                     </button>
