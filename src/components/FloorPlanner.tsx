@@ -294,23 +294,10 @@ function FloorPlan({
         <img
           src={imageSrc}
           alt={`${label} планировка`}
-          className="w-full h-full object-cover opacity-90"
+          className="w-full h-full object-cover"
           draggable={false}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
-
-        {/* room labels */}
-        {rooms.map(({ name, area, top, left }) => (
-          <div
-            key={name}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
-            style={{ top, left }}
-          >
-            <div className="text-[#F3F5F8] font-semibold" style={{ fontSize: '10px' }}>
-              {name}
-            </div>
-            <div style={{ fontSize: '9px', color: '#8B93A1' }}>{area}</div>
-          </div>
-        ))}
 
         {/* dropped objects */}
         {objects.map(({ id, Icon, x, y }) => (

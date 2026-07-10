@@ -16,6 +16,7 @@ export default function Hero() {
           src="/images/hero.jpg"
           alt="A-Frame дом ночью"
           className="w-full h-full object-cover object-center"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
         <div
           className="absolute inset-0"
