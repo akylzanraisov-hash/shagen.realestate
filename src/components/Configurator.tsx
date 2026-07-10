@@ -199,7 +199,7 @@ function ViewportImage({ activeView }: { activeView: number }) {
         </div>
       ) : (
         <img
-          src="/images/model-fallback.jpg"
+          src="/model-fallback.jpg"
           alt="A-Frame модель"
           style={{
             ...tiltStyle,
@@ -249,7 +249,7 @@ function FullscreenOverlay({
         </div>
       ) : (
         <img
-          src="/images/model-fallback.jpg"
+          src="/model-fallback.jpg"
           alt="A-Frame модель"
           onClick={(e) => e.stopPropagation()}
           style={{
