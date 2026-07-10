@@ -1,9 +1,10 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 
-// Three.js r147 + OrbitControls are loaded via CDN scripts in index.html and
-// exposed as window.THREE / window.THREE.OrbitControls (UMD globals).
+// Three.js r147 UMD global loaded via CDN script in index.html.
 // The Bolt WebContainer dev-server cannot resolve the 'three' npm package
-// through Vite's module graph at HMR time, so we read globals instead.
+// through Vite's module graph at HMR time, so we read the global instead.
+// OrbitControls is intentionally NOT loaded from CDN — we use a minimal
+// spherical-coords controller implemented below.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getT = (): any => (window as any).THREE;
 
@@ -56,6 +57,62 @@ function buildGableGeo(peak: number, THREE: any) {
   return geo;
 }
 
+// Minimal spherical-coords camera controller (replaces OrbitControls).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makeController(camera: any, domEl: HTMLElement, THREE: any) {
+  const target = new THREE.Vector3(0, 1, 0);
+  const initial = { r: 11, theta: Math.PI / 5, phi: Math.PI / 4.5 };
+  let r = initial.r, theta = initial.theta, phi = initial.phi;
+  let drag = false;
+  let px = 0, py = 0;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  function applyPos() {
+    camera.position.set(
+      target.x + r * Math.sin(theta) * Math.sin(phi),
+      target.y + r * Math.cos(theta),
+      target.z + r * Math.sin(theta) * Math.cos(phi),
+    );
+    camera.lookAt(target);
+  }
+  applyPos();
+
+  const onDown = (e: PointerEvent) => { drag = true; px = e.clientX; py = e.clientY; domEl.setPointerCapture(e.pointerId); };
+  const onUp   = () => { drag = false; };
+  const onMove = (e: PointerEvent) => {
+    if (!drag) return;
+    const dx = e.clientX - px, dy = e.clientY - py;
+    px = e.clientX; py = e.clientY;
+    phi   -= dx * 0.007;
+    theta  = clamp(theta - dy * 0.007, 0.15, Math.PI / 2.1);
+    applyPos();
+  };
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    r = clamp(r + e.deltaY * 0.01, 4, 18);
+    applyPos();
+  };
+
+  domEl.addEventListener('pointerdown', onDown);
+  domEl.addEventListener('pointerup',   onUp);
+  domEl.addEventListener('pointermove', onMove);
+  domEl.addEventListener('wheel',       onWheel, { passive: false });
+
+  return {
+    target,
+    dispose() {
+      domEl.removeEventListener('pointerdown', onDown);
+      domEl.removeEventListener('pointerup',   onUp);
+      domEl.removeEventListener('pointermove', onMove);
+      domEl.removeEventListener('wheel',       onWheel);
+    },
+    reset() {
+      r = initial.r; theta = initial.theta; phi = initial.phi;
+      applyPos();
+    },
+  };
+}
+
 interface Props {
   params:      SceneParams;
   onResetRef?: (fn: () => void) => void;
@@ -72,11 +129,7 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
   paramsRef.current = params;
 
   const resetCamera = useCallback(() => {
-    const s = st.current;
-    if (!s.camera || !s.controls) return;
-    s.camera.position.set(6, 5, 8);
-    s.controls.target.set(0, 1, 0);
-    s.controls.reset();
+    st.current.controls?.reset();
   }, []);
 
   useEffect(() => { onResetRef?.(resetCamera); }, [onResetRef, resetCamera]);
@@ -105,8 +158,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
 
     const THREE = getT();
     if (!THREE) { setFailed(true); return; }
-    const OrbitControls = THREE.OrbitControls;
-    if (!OrbitControls) { setFailed(true); return; }
 
     try {
       const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -127,18 +178,9 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         0.1,
         100,
       );
-      camera.position.set(6, 5, 8);
       s.camera = camera;
 
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 1, 0);
-      controls.minPolarAngle  = Math.PI / 8;
-      controls.maxPolarAngle  = Math.PI / 2.1;
-      controls.minDistance    = 4;
-      controls.maxDistance    = 18;
-      controls.enableDamping  = true;
-      controls.dampingFactor  = 0.08;
-      controls.update();
+      const controls = makeController(camera, renderer.domElement, THREE);
       s.controls = controls;
 
       scene.add(new THREE.AmbientLight(0x98b8d8, 0.15));
@@ -272,7 +314,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
           s.innerLight2.intensity = lerp(s.innerLight2.intensity, 0, t);
         }
 
-        controls.update();
         renderer.render(scene, camera);
       }
       animate();
@@ -291,6 +332,7 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       return () => {
         cancelAnimationFrame(s.animId);
         ro.disconnect();
+        controls.dispose();
         renderer.dispose();
         if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       };
