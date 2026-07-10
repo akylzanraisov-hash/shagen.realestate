@@ -40,7 +40,8 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center pt-28 pb-10">
         <div className="max-w-[1280px] mx-auto px-6 w-full">
-          <div className="max-w-[680px]">
+          <div className="flex items-center justify-between gap-8">
+          <div className="max-w-[560px]">
             <h1
               className="font-extrabold uppercase leading-[1.12] mb-6"
               style={{ fontSize: 'clamp(32px, 4.2vw, 52px)' }}
@@ -76,6 +77,18 @@ export default function Hero() {
               >
                 СМОТРЕТЬ ПРОЕКТЫ
               </button>
+            </div>
+          </div>
+
+            {/* Right photo */}
+            <div className="hidden lg:block flex-shrink-0 w-[420px] xl:w-[500px]">
+              <img
+                src="/улучши_изоброжение_до_4к_4K_202607100352.jpeg"
+                alt="A-Frame дом изометрия"
+                className="w-full rounded-2xl object-cover"
+                style={{ boxShadow: '0 0 60px rgba(217,163,74,0.12)' }}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
             </div>
           </div>
         </div>
