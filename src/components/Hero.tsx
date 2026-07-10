@@ -16,12 +16,12 @@ export default function Hero() {
           src="/улучши_изоброжение_до_4к_4K_202607100352.jpeg"
           alt="A-Frame дом ночью"
           className="w-full h-full object-cover"
-          style={{ objectPosition: '70% center' }}
+          style={{ objectPosition: '42% 35%' }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(90deg, #0A0D12 0%, rgba(10,13,18,0.88) 38%, rgba(10,13,18,0.15) 70%, transparent 100%)' }}
+          style={{ background: 'linear-gradient(90deg, #0A0D12 0%, rgba(10,13,18,0.92) 45%, rgba(10,13,18,0.15) 70%, transparent 100%)' }}
         />
         <div
           className="absolute inset-0"
