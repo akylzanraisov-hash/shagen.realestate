@@ -13,35 +13,30 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <img
-          src="/images/hero.jpg"
+          src="/улучши_изоброжение_до_4к_4K_202607100352.jpeg"
           alt="A-Frame дом ночью"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover"
+          style={{ objectPosition: '70% center' }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(90deg, #0A0D12 0%, rgba(10,13,18,0.85) 45%, rgba(10,13,18,0.2) 75%, transparent 100%)',
-          }}
+          style={{ background: 'linear-gradient(90deg, #0A0D12 0%, rgba(10,13,18,0.88) 38%, rgba(10,13,18,0.15) 70%, transparent 100%)' }}
         />
         <div
           className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(to top, #0A0D12 0%, rgba(10,13,18,0.7) 15%, transparent 40%)',
-          }}
+          style={{ background: 'linear-gradient(to top, #0A0D12 0%, rgba(10,13,18,0.7) 12%, transparent 35%)' }}
         />
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(10,13,18,0.5) 0%, transparent 20%)' }}
+          style={{ background: 'linear-gradient(to bottom, rgba(10,13,18,0.6) 0%, transparent 18%)' }}
         />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center pt-28 pb-10">
         <div className="max-w-[1280px] mx-auto px-6 w-full">
-          <div className="flex items-center justify-between gap-8">
-          <div className="max-w-[560px]">
+          <div className="max-w-[680px]">
             <h1
               className="font-extrabold uppercase leading-[1.12] mb-6"
               style={{ fontSize: 'clamp(32px, 4.2vw, 52px)' }}
@@ -59,7 +54,6 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Buttons: side-by-side on md+, stacked full-width on mobile */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 className="text-[11px] font-semibold uppercase px-7 py-3.5 rounded-lg transition-all duration-200 hover:brightness-110 sm:w-auto w-full"
@@ -79,28 +73,15 @@ export default function Hero() {
               </button>
             </div>
           </div>
-
-            {/* Right photo */}
-            <div className="hidden lg:block flex-shrink-0 w-[420px] xl:w-[500px]">
-              <img
-                src="/улучши_изоброжение_до_4к_4K_202607100352.jpeg"
-                alt="A-Frame дом изометрия"
-                className="w-full rounded-2xl object-cover"
-                style={{ boxShadow: '0 0 60px rgba(217,163,74,0.12)' }}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Bottom advantages bar: 4-col on md+, 2x2 on mobile */}
+      {/* Bottom advantages bar */}
       <div className="relative z-10">
         <div className="max-w-[1280px] mx-auto px-6 pb-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
             {advantages.map((adv, i) => {
               const Icon = adv.icon;
-              // mobile 2×2: odd index (right column) gets border; on md+ all except i=0
               const borderClass =
                 i === 0
                   ? ''
