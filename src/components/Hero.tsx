@@ -13,7 +13,7 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <img
-          src="/улучши_изоброжение_до_4к_4K_202607100352.jpeg"
+          src="/images/hero.jpg"
           alt="A-Frame дом ночью"
           className="w-full h-full object-cover"
           style={{ objectPosition: '42% 35%' }}

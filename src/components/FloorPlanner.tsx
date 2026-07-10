@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import FloorPlanSvg from './FloorPlanSvg';
 import {
   X,
   BedDouble,
@@ -189,7 +190,7 @@ function AddRoomModal({
 
 function FloorPlan({
   label,
-  imageSrc,
+  floor,
   rooms,
   active,
   onClick,
@@ -200,7 +201,7 @@ function FloorPlan({
   isDragActive,
 }: {
   label: string;
-  imageSrc: string;
+  floor: 1 | 2;
   rooms: { name: string; area: string; top: string; left: string }[];
   active: boolean;
   onClick: () => void;
@@ -291,13 +292,9 @@ function FloorPlan({
           aspectRatio: '0.85',
         }}
       >
-        <img
-          src={imageSrc}
-          alt={`${label} планировка`}
-          className="w-full h-full object-cover"
-          draggable={false}
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-        />
+        <div className="absolute inset-0 pointer-events-none select-none">
+          <FloorPlanSvg floor={floor} />
+        </div>
 
         {/* dropped objects */}
         {objects.map(({ id, Icon, x, y }) => (
@@ -499,7 +496,7 @@ export default function FloorPlanner() {
               <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
                 <FloorPlan
                   label="1 ЭТАЖ"
-                  imageSrc="/images/plan-1.jpg"
+                  floor={1}
                   rooms={floor1Rooms}
                   active={selectedFloor === 1}
                   onClick={() => setSelectedFloor(1)}
@@ -518,7 +515,7 @@ export default function FloorPlanner() {
 
                 <FloorPlan
                   label="2 ЭТАЖ"
-                  imageSrc="/images/plan-2.jpg"
+                  floor={2}
                   rooms={floor2Rooms}
                   active={selectedFloor === 2}
                   onClick={() => setSelectedFloor(2)}

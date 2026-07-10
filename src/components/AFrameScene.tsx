@@ -1,8 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-
-// Three.js + OrbitControls loaded via CDN <script> tags in index.html
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getThree = (): any => (window as any).THREE;
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const ROOF_COLORS = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
 const FACADE_COLORS = ['#B98A4A', '#2E333B', '#4A505A', '#8A9099'];
@@ -28,8 +26,7 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRoofGeo(peak: number, THREE: any) {
+function buildRoofGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([
     -HW, 0, -HD,  -HW, 0,  HD,   0, peak,  HD,
@@ -44,8 +41,7 @@ function buildRoofGeo(peak: number, THREE: any) {
   return geo;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildGableGeo(peak: number, THREE: any) {
+function buildGableGeo(peak: number) {
   const geo = new THREE.BufferGeometry();
   const v = new Float32Array([-HW, 0, 0,  HW, 0, 0,  0, peak, 0]);
   geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
@@ -90,12 +86,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
     const s = st.current;
 
     try {
-      const THREE = getThree();
-      if (!THREE) throw new Error('THREE not available');
-      const OrbitControls = THREE.OrbitControls;
-      if (!OrbitControls) throw new Error('OrbitControls not available');
-
-      // renderer
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -105,17 +95,14 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       mount.appendChild(renderer.domElement);
       s.renderer = renderer;
 
-      // scene
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(0x0b0f14, 18, 32);
       s.scene = scene;
 
-      // camera
       const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 100);
       camera.position.set(6, 5, 8);
       s.camera = camera;
 
-      // controls
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 1, 0);
       controls.minPolarAngle = Math.PI / 8;
@@ -127,7 +114,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       controls.update();
       s.controls = controls;
 
-      // lights
       scene.add(new THREE.AmbientLight(0x98b8d8, 0.15));
       const dirLight = new THREE.DirectionalLight(0xb8cce0, 0.35);
       dirLight.position.set(-5, 10, 5);
@@ -151,15 +137,16 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       scene.add(innerLight2);
       s.innerLight2 = innerLight2;
 
-      // rounded lawn platform
-      const platformGeo = new THREE.CylinderGeometry(6, 6, 0.18, 64);
-      const platformMat = new THREE.MeshStandardMaterial({ color: 0x1a2a12, roughness: 0.95 });
-      const platform = new THREE.Mesh(platformGeo, platformMat);
+      // Rounded lawn platform
+      const platform = new THREE.Mesh(
+        new THREE.CylinderGeometry(6, 6, 0.18, 64),
+        new THREE.MeshStandardMaterial({ color: 0x1a2a12, roughness: 0.95 }),
+      );
       platform.position.y = -0.09;
       platform.receiveShadow = true;
       scene.add(platform);
 
-      // wooden terrace
+      // Wooden terrace
       const terrace = new THREE.Mesh(
         new THREE.BoxGeometry(W - 0.4, 0.14, 2.6),
         new THREE.MeshStandardMaterial({ color: 0x5c3d22, roughness: 0.88 }),
@@ -176,8 +163,8 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         scene.add(plank);
       });
 
-      // roof
       const initPeak = peakY(params.roofAngle);
+
       const roofMat = new THREE.MeshStandardMaterial({
         color: new THREE.Color(ROOF_COLORS[params.roofColorIdx]),
         roughness: 0.75,
@@ -185,13 +172,12 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         side: THREE.DoubleSide,
       });
       s.roofMat = roofMat;
-      const roofMesh = new THREE.Mesh(buildRoofGeo(initPeak, THREE), roofMat);
+      const roofMesh = new THREE.Mesh(buildRoofGeo(initPeak), roofMat);
       roofMesh.castShadow = true;
       roofMesh.receiveShadow = true;
       scene.add(roofMesh);
       s.roofMesh = roofMesh;
 
-      // gables (glass triangles with warm emission)
       const makeGableMat = () => new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(FACADE_COLORS[params.facadeColorIdx]),
         transparent: true,
@@ -208,18 +194,17 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       s.frontGableMat = frontGableMat;
       s.backGableMat = backGableMat;
 
-      const frontGable = new THREE.Mesh(buildGableGeo(initPeak, THREE), frontGableMat);
+      const frontGable = new THREE.Mesh(buildGableGeo(initPeak), frontGableMat);
       frontGable.position.set(0, 0, HD + 0.01);
       scene.add(frontGable);
       s.frontGable = frontGable;
 
-      const backGable = new THREE.Mesh(buildGableGeo(initPeak, THREE), backGableMat);
+      const backGable = new THREE.Mesh(buildGableGeo(initPeak), backGableMat);
       backGable.position.set(0, 0, -HD - 0.01);
       backGable.rotation.y = Math.PI;
       scene.add(backGable);
       s.backGable = backGable;
 
-      // 2nd floor plate
       const floorPlate = new THREE.Mesh(
         new THREE.BoxGeometry(W - 0.08, 0.14, D - 0.08),
         new THREE.MeshStandardMaterial({ color: 0x1a130a, roughness: 0.9 }),
@@ -231,7 +216,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       scene.add(floorPlate);
       s.floorPlate = floorPlate;
 
-      // animation
       let last = performance.now();
       function animate() {
         s.animId = requestAnimationFrame(animate);
@@ -246,14 +230,14 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
         const peak = peakY(s.live.angle);
 
         s.roofMesh.geometry.dispose();
-        s.roofMesh.geometry = buildRoofGeo(peak, THREE);
+        s.roofMesh.geometry = buildRoofGeo(peak);
 
         s.frontGable.geometry.dispose();
-        s.frontGable.geometry = buildGableGeo(peak, THREE);
+        s.frontGable.geometry = buildGableGeo(peak);
         s.frontGable.position.set(0, 0, HD + 0.01);
 
         s.backGable.geometry.dispose();
-        s.backGable.geometry = buildGableGeo(peak, THREE);
+        s.backGable.geometry = buildGableGeo(peak);
         s.backGable.position.set(0, 0, -HD - 0.01);
 
         s.roofMat.color.lerp(new THREE.Color(ROOF_COLORS[p.roofColorIdx]), t);
@@ -277,7 +261,6 @@ export default function AFrameScene({ params, onResetRef, active }: Props) {
       }
       animate();
 
-      // resize
       const ro = new ResizeObserver(() => {
         if (!mount) return;
         camera.aspect = mount.clientWidth / mount.clientHeight;

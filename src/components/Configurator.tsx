@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import AFrameScene, { SceneParams } from './AFrameScene';
+import FloorPlanSvg from './FloorPlanSvg';
 
 const tabs = ['КОНСТРУКТОР ДОМА', 'ПЛАНИРОВКА', 'ИНТЕРЬЕР', 'ЭКСТЕРЬЕР', 'РАСЧЕТ СТОИМОСТИ'];
 
@@ -176,22 +177,12 @@ function ViewportImage({ activeView }: { activeView: number }) {
 
   const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
 
-  const getImageSrc = () => {
-    if (displayedView === 1) return '/images/plan-1.jpg';
-    return '/images/model-fallback.jpg';
-  };
-
-  const getImageStyle = (): React.CSSProperties => {
-    const base: React.CSSProperties = {
-      transition: 'transform 150ms ease-out, opacity 200ms ease',
-      transformOrigin: displayedView === 2 ? '55% 65%' : 'center center',
-      transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${floating}px) scale(${displayedView === 2 ? 1.8 : 1})`,
-      opacity: imgVisible ? 1 : 0,
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover' as const,
-    };
-    return base;
+  const tiltStyle: React.CSSProperties = {
+    transition: 'transform 150ms ease-out, opacity 200ms ease',
+    transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${floating}px)`,
+    opacity: imgVisible ? 1 : 0,
+    width: '100%',
+    height: '100%',
   };
 
   return (
@@ -202,12 +193,23 @@ function ViewportImage({ activeView }: { activeView: number }) {
       onMouseLeave={handleMouseLeave}
       style={{ cursor: 'default' }}
     >
-      <img
-        src={getImageSrc()}
-        alt="A-Frame модель"
-        style={getImageStyle()}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
-      />
+      {displayedView === 1 ? (
+        <div style={{ ...tiltStyle, padding: '12px' }}>
+          <FloorPlanSvg floor={1} />
+        </div>
+      ) : (
+        <img
+          src="/images/model-fallback.jpg"
+          alt="A-Frame модель"
+          style={{
+            ...tiltStyle,
+            objectFit: 'cover',
+            transformOrigin: displayedView === 2 ? '55% 65%' : 'center center',
+            transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${floating}px) scale(${displayedView === 2 ? 1.8 : 1})`,
+          }}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
+        />
+      )}
     </div>
   );
 }
@@ -225,10 +227,6 @@ function FullscreenOverlay({
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const src = activeView === 1 ? '/images/plan-1.jpg' : '/images/model-fallback.jpg';
-  const scale = activeView === 2 ? 1.8 : 1;
-  const origin = activeView === 2 ? '55% 65%' : 'center center';
-
   return (
     <div
       className="fixed inset-0 z-[9998] flex items-center justify-center"
@@ -242,20 +240,29 @@ function FullscreenOverlay({
       >
         <X size={18} strokeWidth={1.5} />
       </button>
-      <img
-        src={src}
-        alt="A-Frame модель"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          maxHeight: '90vh',
-          maxWidth: '90vw',
-          objectFit: 'contain',
-          transform: `scale(${scale})`,
-          transformOrigin: origin,
-          borderRadius: '12px',
-        }}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-      />
+      {activeView === 1 ? (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{ maxHeight: '90vh', maxWidth: '90vw', width: '520px', borderRadius: '12px', overflow: 'hidden' }}
+        >
+          <FloorPlanSvg floor={1} />
+        </div>
+      ) : (
+        <img
+          src="/images/model-fallback.jpg"
+          alt="A-Frame модель"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            maxHeight: '90vh',
+            maxWidth: '90vw',
+            objectFit: 'contain',
+            transform: activeView === 2 ? 'scale(1.8)' : undefined,
+            transformOrigin: activeView === 2 ? '55% 65%' : 'center center',
+            borderRadius: '12px',
+          }}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+        />
+      )}
     </div>
   );
 }
