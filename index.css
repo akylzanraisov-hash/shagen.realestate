@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  background-color: #0A0D12;
+  color: #F3F5F8;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #D9A34A var(--range-progress, 50%), #2A313C var(--range-progress, 50%));
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6.5px;
+  border-radius: 50%;
+  background: #D9A34A;
+  border: 2px solid #0E1218;
+}
+input[type="range"]::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: #2A313C;
+}
+input[type="range"]::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: #D9A34A;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #D9A34A;
+  border: 2px solid #0E1218;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Responsive grids for Configurator and FloorPlanner ── */
+
+/* Configurator: 3-col desktop → narrow at 1024 → single col at 768 */
+.cfg-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 260px 1fr 260px;
+}
+@media (max-width: 1200px) {
+  .cfg-grid {
+    grid-template-columns: 220px 1fr 220px;
+  }
+}
+@media (max-width: 768px) {
+  .cfg-grid {
+    grid-template-columns: 1fr;
+  }
+  .cfg-grid > *:nth-child(1) { order: 1; }
+  .cfg-grid > *:nth-child(2) { order: 2; }
+  .cfg-grid > *:nth-child(3) { order: 3; }
+}
+
+/* FloorPlanner: same column behaviour */
+.fp-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 260px 1fr 260px;
+}
+@media (max-width: 1200px) {
+  .fp-grid {
+    grid-template-columns: 220px 1fr 220px;
+  }
+}
+@media (max-width: 768px) {
+  .fp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Remove default focus ring from all interactive elements */
+button:focus,
+button:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible {
+  outline: none;
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+}
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
