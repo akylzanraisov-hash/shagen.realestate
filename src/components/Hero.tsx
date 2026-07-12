@@ -9,13 +9,13 @@ const advantages = [
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden">
+    <section className="relative flex flex-col overflow-hidden" style={{ minHeight: '100svh' }}>
       {/* Background image */}
       <div className="absolute inset-0">
         <img
           src="/hero.jpg"
           alt="A-Frame дом ночью"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover hero-img"
           style={{ objectPosition: '42% 35%' }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
@@ -39,12 +39,12 @@ export default function Hero() {
           <div className="max-w-[680px]">
             <h1
               className="font-extrabold uppercase leading-[1.12] mb-6"
-              style={{ fontSize: 'clamp(32px, 4.2vw, 52px)' }}
+              style={{ fontSize: 'clamp(28px, 4.2vw, 52px)' }}
             >
-              <span className="text-white block whitespace-nowrap">СТРОИТЕЛЬСТВО</span>
-              <span className="text-white block whitespace-nowrap">КАРКАСНЫХ ДОМОВ</span>
-              <span className="text-white block whitespace-nowrap">ПРЕМИУМ КЛАССА</span>
-              <span style={{ color: '#D9A34A' }} className="block whitespace-nowrap">A-FRAME</span>
+              <span className="text-white block">СТРОИТЕЛЬСТВО</span>
+              <span className="text-white block">КАРКАСНЫХ ДОМОВ</span>
+              <span className="text-white block">ПРЕМИУМ КЛАССА</span>
+              <span style={{ color: '#D9A34A' }} className="block">A-FRAME</span>
             </h1>
 
             <div className="flex items-stretch gap-4 mb-8">
@@ -56,18 +56,19 @@ export default function Hero() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                className="text-[11px] font-semibold uppercase px-7 py-3.5 rounded-lg transition-all duration-200 hover:brightness-110 sm:w-auto w-full"
+                className="text-[11px] font-semibold uppercase px-7 rounded-lg transition-all duration-200 hover:brightness-110 w-full sm:w-auto"
                 style={{
                   background: 'linear-gradient(180deg, #E7B257, #C68F3F)',
                   color: '#171006',
                   letterSpacing: '0.08em',
+                  minHeight: '44px',
                 }}
               >
                 СПРОЕКТИРОВАТЬ ДОМ
               </button>
               <button
-                className="text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] px-7 py-3.5 rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] sm:w-auto w-full"
-                style={{ letterSpacing: '0.08em' }}
+                className="text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] px-7 rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] w-full sm:w-auto"
+                style={{ letterSpacing: '0.08em', minHeight: '44px' }}
               >
                 СМОТРЕТЬ ПРОЕКТЫ
               </button>
@@ -88,10 +89,11 @@ export default function Hero() {
                   : i % 2 !== 0
                   ? 'border-l border-white/[0.08]'
                   : 'md:border-l border-white/[0.08]';
+              const topBorderClass = i >= 2 ? 'border-t border-white/[0.08] md:border-t-0' : '';
               return (
                 <div
                   key={i}
-                  className={`flex flex-col items-start gap-3 px-4 md:px-6 py-4 ${borderClass}`}
+                  className={`flex flex-col items-start gap-3 px-4 md:px-6 py-4 ${borderClass} ${topBorderClass}`}
                 >
                   <Icon size={28} className="text-[#D9A34A]" strokeWidth={1.5} />
                   <span

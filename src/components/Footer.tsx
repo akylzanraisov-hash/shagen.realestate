@@ -7,7 +7,7 @@ export default function Footer() {
       style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
     >
       <div className="max-w-[1280px] mx-auto px-6">
-        <div className="grid grid-cols-4 gap-10 mb-10">
+        <div className="footer-grid mb-10">
           {/* Col 1 - Logo + description */}
           <div>
             <div className="flex flex-col items-start mb-4">
@@ -120,13 +120,13 @@ export default function Footer() {
               {[Instagram, Send, Youtube].map((Icon, i) => (
                 <button
                   key={i}
-                  className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:border-[#D9A34A] hover:text-[#D9A34A]"
+                  className="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 hover:border-[#D9A34A] hover:text-[#D9A34A]"
                   style={{
                     border: '1px solid rgba(255,255,255,0.15)',
                     color: '#8B93A1',
                   }}
                 >
-                  <Icon size={15} strokeWidth={1.5} />
+                  <Icon size={16} strokeWidth={1.5} />
                 </button>
               ))}
             </div>

@@ -88,13 +88,14 @@ function AddRoomModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
       style={{ background: 'rgba(10,13,18,0.75)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="rounded-[16px] p-6 w-[340px] flex flex-col gap-5"
+        className="rounded-[16px] p-6 flex flex-col gap-5 w-full"
         style={{
+          maxWidth: 'min(92vw, 420px)',
           background: '#10151C',
           border: '1px solid rgba(255,255,255,0.07)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
@@ -107,7 +108,10 @@ function AddRoomModal({
           >
             ДОБАВИТЬ КОМНАТУ
           </span>
-          <button onClick={onClose} className="text-[#707887] hover:text-[#F3F5F8] transition-colors duration-200">
+          <button
+            onClick={onClose}
+            className="w-11 h-11 flex items-center justify-center text-[#707887] hover:text-[#F3F5F8] transition-colors duration-200 rounded-xl"
+          >
             <X size={16} />
           </button>
         </div>
@@ -125,10 +129,12 @@ function AddRoomModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Например, Спальня"
-              className="w-full px-3 py-2.5 rounded-[10px] text-sm text-[#F3F5F8] outline-none transition-all duration-200 placeholder-[#707887]"
+              className="w-full px-3 rounded-[10px] text-[#F3F5F8] outline-none transition-all duration-200 placeholder-[#707887]"
               style={{
                 background: '#151B24',
                 border: '1px solid rgba(255,255,255,0.08)',
+                fontSize: '16px',
+                height: '44px',
               }}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#D9A34A')}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
@@ -149,10 +155,12 @@ function AddRoomModal({
               placeholder="0.0"
               min={0}
               step={0.1}
-              className="w-full px-3 py-2.5 rounded-[10px] text-sm text-[#F3F5F8] outline-none transition-all duration-200 placeholder-[#707887]"
+              className="w-full px-3 rounded-[10px] text-[#F3F5F8] outline-none transition-all duration-200 placeholder-[#707887]"
               style={{
                 background: '#151B24',
                 border: '1px solid rgba(255,255,255,0.08)',
+                fontSize: '16px',
+                height: '44px',
               }}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#D9A34A')}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
@@ -161,24 +169,25 @@ function AddRoomModal({
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 text-[11px] font-semibold text-[#8B93A1] border rounded-lg uppercase transition-all duration-200 hover:text-[#F3F5F8]"
-            style={{ letterSpacing: '0.08em', borderColor: 'rgba(255,255,255,0.1)' }}
-          >
-            ОТМЕНА
-          </button>
+        <div className="flex flex-col gap-3">
           <button
             onClick={handleSave}
-            className="flex-1 py-3 text-[11px] font-semibold rounded-lg uppercase transition-all duration-200 hover:brightness-110"
+            className="w-full text-[11px] font-semibold rounded-lg uppercase transition-all duration-200 hover:brightness-110"
             style={{
               background: 'linear-gradient(180deg, #E7B257, #C68F3F)',
               color: '#171006',
               letterSpacing: '0.08em',
+              minHeight: '44px',
             }}
           >
             СОХРАНИТЬ
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full text-[11px] font-semibold text-[#8B93A1] border rounded-lg uppercase transition-all duration-200 hover:text-[#F3F5F8]"
+            style={{ letterSpacing: '0.08em', borderColor: 'rgba(255,255,255,0.1)', minHeight: '44px' }}
+          >
+            ОТМЕНА
           </button>
         </div>
       </div>
@@ -199,6 +208,8 @@ function FloorPlan({
   onMoveObject,
   onRemoveObject,
   isDragActive,
+  pendingIcon,
+  onTouchPlace,
 }: {
   label: string;
   floor: 1 | 2;
@@ -210,6 +221,8 @@ function FloorPlan({
   onMoveObject: (id: number, x: number, y: number) => void;
   onRemoveObject: (id: number) => void;
   isDragActive: boolean;
+  pendingIcon: LucideIcon | null;
+  onTouchPlace: (icon: LucideIcon, x: number, y: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const draggingObjectId = useRef<number | null>(null);
@@ -231,7 +244,6 @@ function FloorPlan({
     e.preventDefault();
     const iconName = e.dataTransfer.getData('iconName');
     if (!iconName || !containerRef.current) return;
-    // find icon from all groups
     let foundIcon: LucideIcon | null = null;
     for (const group of objectGroups) {
       const icon = group.icons.find((ic) => ic.displayName === iconName || ic.name === iconName);
@@ -240,6 +252,17 @@ function FloorPlan({
     if (!foundIcon) return;
     const { x, y } = getRelativePos(e.clientX, e.clientY);
     onDrop(foundIcon, x, y);
+  };
+
+  // Touch tap on plan to place a pending icon
+  const handlePlanTap = (e: React.MouseEvent) => {
+    if (pendingIcon && containerRef.current) {
+      const { x, y } = getRelativePos(e.clientX, e.clientY);
+      onTouchPlace(pendingIcon, x, y);
+      e.stopPropagation();
+      return;
+    }
+    onClick();
   };
 
   // pointer-based move for placed objects
@@ -268,6 +291,8 @@ function FloorPlan({
     draggingObjectId.current = null;
   };
 
+  const isPending = !!pendingIcon;
+
   return (
     <div className="flex-1 w-full flex flex-col gap-2">
       <span
@@ -278,18 +303,22 @@ function FloorPlan({
       </span>
       <div
         ref={containerRef}
-        onClick={onClick}
+        onClick={handlePlanTap}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200"
+        className="relative rounded-xl overflow-hidden transition-all duration-200"
         style={{
           background: '#10151C',
-          border: active
+          border: isPending
+            ? '2px solid rgba(217,163,74,0.7)'
+            : active
             ? '2px solid #D9A34A'
             : isDragActive
             ? '2px solid rgba(217,163,74,0.4)'
             : '1px solid rgba(255,255,255,0.07)',
+          cursor: isPending ? 'crosshair' : 'pointer',
           aspectRatio: '0.85',
+          width: '100%',
         }}
       >
         <div className="absolute inset-0 pointer-events-none select-none">
@@ -306,7 +335,11 @@ function FloorPlan({
             onPointerMove={(e) => handleObjectPointerMove(e, id)}
             onPointerUp={handleObjectPointerUp}
             onDoubleClick={(e) => { e.stopPropagation(); onRemoveObject(id); }}
-            title="Двойной клик — удалить"
+            onClick={(e) => {
+              // touch: single tap on already-placed object removes it when nothing is pending
+              if (!pendingIcon) { e.stopPropagation(); onRemoveObject(id); }
+            }}
+            title="Двойной клик / тап — удалить"
           >
             <div
               className="w-7 h-7 flex items-center justify-center rounded-lg transition-opacity duration-200 hover:opacity-80"
@@ -333,6 +366,10 @@ export default function FloorPlanner() {
   const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+
+  // Touch mode: icon selected from palette waiting to be placed
+  const [pendingIcon, setPendingIcon] = useState<LucideIcon | null>(null);
+  const [hint, setHint] = useState<string>('Перетащите объект на план или выберите тапом');
 
   // objects per floor: floor 1 → index 0, floor 2 → index 1
   const [floorObjects, setFloorObjects] = useState<[DroppedObject[], DroppedObject[]]>([[], []]);
@@ -369,6 +406,22 @@ export default function FloorPlanner() {
     });
   }, []);
 
+  const handleTileClick = (Icon: LucideIcon) => {
+    if (pendingIcon === Icon) {
+      setPendingIcon(null);
+      setHint('Перетащите объект на план или выберите тапом');
+    } else {
+      setPendingIcon(Icon);
+      setHint('Теперь коснитесь плана');
+    }
+  };
+
+  const handleTouchPlace = (floorIdx: 0 | 1, Icon: LucideIcon, x: number, y: number) => {
+    handleDrop(floorIdx, Icon, x, y);
+    setPendingIcon(null);
+    setHint('Перетащите объект на план или выберите тапом');
+  };
+
   // global drag tracking for hint highlight
   useEffect(() => {
     const onDragStart = () => setIsDragActive(true);
@@ -388,7 +441,7 @@ export default function FloorPlanner() {
       <section className="py-10">
         <div className="max-w-[1280px] mx-auto px-6">
           <div
-            className="rounded-[20px] p-6"
+            className="rounded-[20px] p-4 md:p-6"
             style={{
               background: '#0E1218',
               border: '1px solid rgba(255,255,255,0.06)',
@@ -429,10 +482,11 @@ export default function FloorPlanner() {
                       <button
                         key={floor}
                         onClick={() => setSelectedFloor(floor)}
-                        className="flex-1 flex items-center justify-between px-3 py-2.5 rounded-[10px] cursor-pointer transition-all duration-200"
+                        className="flex-1 flex items-center justify-between px-3 rounded-[10px] cursor-pointer transition-all duration-200"
                         style={{
                           background: '#151B24',
                           border: selectedFloor === floor ? '1px solid #D9A34A' : '1px solid rgba(255,255,255,0.08)',
+                          minHeight: '44px',
                         }}
                       >
                         <span
@@ -463,10 +517,11 @@ export default function FloorPlanner() {
                     {rooms.map(({ id, icon: Icon, name, area }) => (
                       <div
                         key={id}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-all duration-200"
+                        className="flex items-center gap-3 px-3 rounded-[10px] transition-all duration-200"
                         style={{
                           background: '#151B24',
                           border: '1px solid rgba(255,255,255,0.08)',
+                          minHeight: '44px',
                         }}
                         onMouseEnter={(e) => {
                           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
@@ -485,15 +540,15 @@ export default function FloorPlanner() {
 
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="w-full py-3 text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] mt-auto"
-                  style={{ letterSpacing: '0.08em' }}
+                  className="w-full text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] mt-auto"
+                  style={{ letterSpacing: '0.08em', minHeight: '44px' }}
                 >
                   ДОБАВИТЬ КОМНАТУ
                 </button>
               </div>
 
               {/* CENTER — floor plans */}
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+              <div className="flex flex-col md:flex-row items-stretch md:items-start gap-4">
                 <FloorPlan
                   label="1 ЭТАЖ"
                   floor={1}
@@ -505,6 +560,8 @@ export default function FloorPlanner() {
                   onMoveObject={(id, x, y) => handleMoveObject(0, id, x, y)}
                   onRemoveObject={(id) => handleRemoveObject(0, id)}
                   isDragActive={isDragActive}
+                  pendingIcon={pendingIcon}
+                  onTouchPlace={(icon, x, y) => handleTouchPlace(0, icon, x, y)}
                 />
 
                 {/* Arrow: right on desktop, down on mobile */}
@@ -524,6 +581,8 @@ export default function FloorPlanner() {
                   onMoveObject={(id, x, y) => handleMoveObject(1, id, x, y)}
                   onRemoveObject={(id) => handleRemoveObject(1, id)}
                   isDragActive={isDragActive}
+                  pendingIcon={pendingIcon}
+                  onTouchPlace={(icon, x, y) => handleTouchPlace(1, icon, x, y)}
                 />
               </div>
 
@@ -551,25 +610,36 @@ export default function FloorPlanner() {
                       {label}
                     </span>
                     <div className="grid grid-cols-4 gap-2">
-                      {icons.map((Icon) => (
-                        <div
-                          key={Icon.displayName ?? Icon.name}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('iconName', Icon.displayName ?? Icon.name ?? '');
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }}
-                          className="flex items-center justify-center rounded-[10px] cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-[rgba(217,163,74,0.5)] hover:bg-[rgba(217,163,74,0.06)]"
-                          style={{
-                            width: '56px',
-                            height: '56px',
-                            background: '#151B24',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                          }}
-                        >
-                          <Icon size={20} strokeWidth={1.5} style={{ color: '#8B93A1' }} />
-                        </div>
-                      ))}
+                      {icons.map((Icon) => {
+                        const isSelected = pendingIcon === Icon;
+                        return (
+                          <div
+                            key={Icon.displayName ?? Icon.name}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('iconName', Icon.displayName ?? Icon.name ?? '');
+                              e.dataTransfer.effectAllowed = 'copy';
+                            }}
+                            onClick={() => handleTileClick(Icon)}
+                            className="flex items-center justify-center rounded-[10px] cursor-pointer transition-all duration-200"
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1',
+                              minHeight: '44px',
+                              background: isSelected ? 'rgba(217,163,74,0.12)' : '#151B24',
+                              border: isSelected
+                                ? '1px solid #D9A34A'
+                                : '1px solid rgba(255,255,255,0.08)',
+                            }}
+                          >
+                            <Icon
+                              size={20}
+                              strokeWidth={1.5}
+                              style={{ color: isSelected ? '#D9A34A' : '#8B93A1' }}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -578,11 +648,11 @@ export default function FloorPlanner() {
                   className="mt-auto transition-colors duration-200"
                   style={{
                     fontSize: '11px',
-                    color: isDragActive ? '#D9A34A' : '#707887',
+                    color: pendingIcon ? '#D9A34A' : isDragActive ? '#D9A34A' : '#707887',
                     letterSpacing: '0.06em',
                   }}
                 >
-                  Перетаскивайте объекты на план
+                  {hint}
                 </p>
               </div>
             </div>

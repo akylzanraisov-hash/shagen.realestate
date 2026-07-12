@@ -20,10 +20,9 @@ export default function WhyUs() {
           ПОЧЕМУ ВЫБИРАЮТ НАС
         </h2>
 
-        {/* Desktop: single row; tablet/mobile: wrap 2-per-row */}
-        <div className="flex flex-wrap justify-center lg:justify-between gap-6">
+        <div className="whyus-grid">
           {stats.map(({ icon: Icon, value, label }, i) => (
-            <div key={i} className="flex items-center gap-4 w-full sm:w-[calc(50%-12px)] lg:w-auto lg:flex-1">
+            <div key={i} className="flex items-center gap-4">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ border: '1.5px solid rgba(217,163,74,0.45)' }}

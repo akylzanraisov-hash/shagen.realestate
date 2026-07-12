@@ -109,7 +109,7 @@ export default function Header() {
             <Logo />
             <button
               onClick={() => setMenuOpen(false)}
-              className="text-[#8B93A1] hover:text-white transition-colors duration-200"
+              className="w-11 h-11 flex items-center justify-center text-[#8B93A1] hover:text-white transition-colors duration-200 rounded-xl"
               aria-label="Закрыть меню"
             >
               <X size={22} strokeWidth={1.5} />
@@ -138,7 +138,7 @@ export default function Header() {
           </nav>
 
           {/* Bottom CTA */}
-          <div className="px-4 pb-8">
+          <div className="px-4" style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))' }}>
             <button
               className="w-full py-4 text-[11px] font-semibold uppercase rounded-xl transition-all duration-200 hover:brightness-110"
               style={{

@@ -44,8 +44,10 @@ function ColorSwatch({
   return (
     <div
       onClick={onClick}
-      className="w-11 h-11 rounded-full cursor-pointer transition-all duration-200"
+      className="rounded-full cursor-pointer transition-all duration-200 flex-shrink-0"
       style={{
+        width: 'clamp(40px, 10vw, 44px)',
+        height: 'clamp(40px, 10vw, 44px)',
         background: color,
         border: '1px solid rgba(255,255,255,0.12)',
         boxShadow: selected ? `0 0 0 2px #10151C, 0 0 0 4px #D9A34A` : 'none',
@@ -229,12 +231,18 @@ function FullscreenOverlay({
   return (
     <div
       className="fixed inset-0 z-[9998] flex items-center justify-center"
-      style={{ background: 'rgba(10,13,18,0.96)' }}
+      style={{
+        background: 'rgba(10,13,18,0.96)',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+      }}
       onClick={onClose}
     >
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-white transition-colors duration-200"
+        className="absolute top-6 right-6 w-11 h-11 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-white transition-colors duration-200"
         style={{ background: 'rgba(255,255,255,0.08)' }}
       >
         <X size={18} strokeWidth={1.5} />
@@ -286,6 +294,8 @@ export default function Configurator() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const tabBarRef = useRef<HTMLDivElement>(null);
+
   const send3d = (msg: object) =>
     frameRef.current?.contentWindow?.postMessage({ type: 'shag3d', ...msg }, '*');
 
@@ -312,6 +322,11 @@ export default function Configurator() {
       if (toastTimer.current) clearTimeout(toastTimer.current);
       toastTimer.current = setTimeout(() => setToastVisible(false), 2500);
     }, 600);
+  };
+
+  const handleTabClick = (i: number, el: HTMLButtonElement) => {
+    setActiveTab(i);
+    el.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
   };
 
   useEffect(() => {
@@ -343,7 +358,7 @@ export default function Configurator() {
       <section className="py-10">
         <div className="max-w-[1280px] mx-auto px-6">
           <div
-            className="rounded-[20px] p-6"
+            className="rounded-[20px] p-4 md:p-6"
             style={{
               background: '#0E1218',
               border: '1px solid rgba(255,255,255,0.06)',
@@ -353,7 +368,7 @@ export default function Configurator() {
             <div className="flex items-center gap-3 mb-5">
               <Zap size={16} className="text-[#D9A34A]" strokeWidth={1.5} />
               <h2
-                className="text-[20px] font-bold uppercase text-[#F3F5F8]"
+                className="text-[18px] md:text-[20px] font-bold uppercase text-[#F3F5F8]"
                 style={{ letterSpacing: '0.06em' }}
               >
                 3D-КОНСТРУКТОР ВАШЕГО ДОМА
@@ -362,14 +377,15 @@ export default function Configurator() {
 
             {/* Tab bar */}
             <div
+              ref={tabBarRef}
               className="flex items-center mb-5 rounded-xl overflow-x-auto scrollbar-hide"
               style={{ background: '#0B0F14', height: '52px', padding: '0 4px' }}
             >
               {tabs.map((tab, i) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(i)}
-                  className={`flex-1 h-full text-center uppercase font-semibold relative transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
+                  onClick={(e) => handleTabClick(i, e.currentTarget)}
+                  className={`flex-shrink-0 h-full px-4 text-center uppercase font-semibold relative transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
                     i === activeTab ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                   }`}
                   style={{ fontSize: '11px', letterSpacing: '0.1em' }}
@@ -405,7 +421,7 @@ export default function Configurator() {
                   </span>
                   <div
                     className="flex items-center justify-between px-3 py-2.5 rounded-[10px] cursor-pointer"
-                    style={{ background: '#151B24', border: '1px solid rgba(255,255,255,0.08)' }}
+                    style={{ background: '#151B24', border: '1px solid rgba(255,255,255,0.08)', minHeight: '44px' }}
                   >
                     <span className="text-[#F3F5F8] text-sm">A-Frame 8x12</span>
                     <ChevronDown size={14} className="text-[#8B93A1]" />
@@ -421,7 +437,7 @@ export default function Configurator() {
                   </span>
                   <div
                     className="flex items-center justify-between px-3 py-2.5 rounded-[10px] cursor-pointer"
-                    style={{ background: '#151B24', border: '1px solid rgba(255,255,255,0.08)' }}
+                    style={{ background: '#151B24', border: '1px solid rgba(255,255,255,0.08)', minHeight: '44px' }}
                   >
                     <span className="text-[#F3F5F8] text-sm">8x12</span>
                     <ChevronDown size={14} className="text-[#8B93A1]" />
@@ -438,22 +454,24 @@ export default function Configurator() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setFloors(1)}
-                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
+                      className="flex-1 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
                       style={{
                         background: floors === 1 ? 'rgba(217,163,74,0.08)' : '#151B24',
                         border: floors === 1 ? '1px solid #D9A34A' : '1px solid rgba(255,255,255,0.08)',
                         color: floors === 1 ? '#D9A34A' : '#8B93A1',
+                        minHeight: '44px',
                       }}
                     >
                       1 этаж
                     </button>
                     <button
                       onClick={() => setFloors(2)}
-                      className="flex-1 py-2 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
+                      className="flex-1 text-sm font-semibold rounded-[10px] transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none"
                       style={{
                         background: floors === 2 ? 'rgba(217,163,74,0.08)' : '#151B24',
                         border: floors === 2 ? '1px solid #D9A34A' : '1px solid rgba(255,255,255,0.08)',
                         color: floors === 2 ? '#D9A34A' : '#8B93A1',
+                        minHeight: '44px',
                       }}
                     >
                       2 этажа
@@ -492,8 +510,8 @@ export default function Configurator() {
                 <button
                   onClick={handleApply}
                   disabled={applying}
-                  className="w-full py-3 text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] mt-auto flex items-center justify-center gap-2 disabled:opacity-70"
-                  style={{ letterSpacing: '0.08em' }}
+                  className="w-full text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)] mt-auto flex items-center justify-center gap-2 disabled:opacity-70"
+                  style={{ letterSpacing: '0.08em', minHeight: '44px' }}
                 >
                   {applying && <Loader2 size={14} className="animate-spin" />}
                   ПРИМЕНИТЬ
@@ -504,7 +522,7 @@ export default function Configurator() {
               <div className="flex flex-col gap-3">
                 <div
                   className="relative rounded-[14px] overflow-hidden flex-1"
-                  style={{ background: '#0B0F14', minHeight: 'clamp(300px, 50vw, 520px)' }}
+                  style={{ background: '#0B0F14', minHeight: 'clamp(320px, 92vw, 520px)' }}
                 >
                   {/* Self-contained 3D configurator in an iframe */}
                   {mode === '3d' && (
@@ -528,33 +546,34 @@ export default function Configurator() {
                     <ViewportImage activeView={activeView} />
                   )}
 
-                  {/* Top-left toolbar */}
+                  {/* Top-left toolbar — compact on small screens */}
                   <div
-                    className="absolute top-4 left-4 flex items-center gap-1 rounded-full px-2 py-1.5 pointer-events-auto"
+                    className="absolute top-3 left-3 flex items-center rounded-full pointer-events-auto toolbar-pill"
                     style={{
                       background: 'rgba(14,18,24,0.9)',
                       border: '1px solid rgba(255,255,255,0.08)',
+                      gap: '2px',
+                      padding: '4px 6px',
                     }}
                   >
                     {[Rotate3d, Share2, Undo2, Move].map((Icon, i) => (
                       <button
                         key={i}
-                        className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
+                        className="toolbar-btn flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       >
-                        <Icon size={15} strokeWidth={1.5} />
+                        <Icon className="toolbar-icon" strokeWidth={1.5} />
                       </button>
                     ))}
                     <button
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
+                      className="toolbar-btn flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       title="Сбросить камеру"
                     >
-                      <RotateCcw size={15} strokeWidth={1.5} />
+                      <RotateCcw className="toolbar-icon" strokeWidth={1.5} />
                     </button>
                   </div>
 
                   {/* Top-right controls */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
-                    {/* Maximize — only in photo mode (in 3D mode ViewportImage doesn't render it) */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2 pointer-events-auto">
                     {mode === 'photo' && (
                       <button
                         onClick={() => setFullscreen(true)}
@@ -584,8 +603,8 @@ export default function Configurator() {
                     </button>
                   </div>
 
-                  {/* Bottom-left hint */}
-                  <div className="absolute bottom-4 left-4 flex items-center gap-2 pointer-events-none">
+                  {/* Bottom-left hint — hidden on very small screens to save space */}
+                  <div className="absolute bottom-3 left-3 hidden sm:flex items-center gap-2 pointer-events-none">
                     <Move size={14} className="text-[#8B93A1]" strokeWidth={1.5} />
                     <span className="text-[12px]" style={{ color: '#8B93A1' }}>
                       Вращайте модель и изменяйте параметры
@@ -593,10 +612,10 @@ export default function Configurator() {
                   </div>
                 </div>
 
-                {/* View tabs */}
+                {/* View tabs — scrollable on mobile */}
                 <div
-                  className="flex items-center rounded-xl overflow-hidden"
-                  style={{ background: '#0B0F14', padding: '4px', height: '52px' }}
+                  className="flex items-center rounded-xl overflow-x-auto scrollbar-hide"
+                  style={{ background: '#0B0F14', padding: '4px', height: '52px', flexWrap: 'nowrap' }}
                 >
                   <div
                     className="px-3 flex-shrink-0"
@@ -611,12 +630,13 @@ export default function Configurator() {
                         setActiveView(idx);
                         send3d({ view: viewName(idx) });
                       }}
-                      className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
+                      className={`flex-shrink-0 flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ${
                         idx === activeView ? 'text-[#D9A34A]' : 'text-[#8B93A1] hover:text-[#C7CBD3]'
                       }`}
                       style={{
                         border: idx === activeView ? '1px solid #D9A34A' : '1px solid transparent',
                         margin: '0 2px',
+                        minHeight: '44px',
                       }}
                     >
                       <Icon size={15} strokeWidth={1.5} />
@@ -651,7 +671,7 @@ export default function Configurator() {
                     >
                       {label}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {colors.map((color, i) => (
                         <ColorSwatch
                           key={color}
@@ -669,14 +689,14 @@ export default function Configurator() {
 
                 <div className="mt-auto flex flex-col gap-3">
                   <button
-                    className="w-full py-3 text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)]"
-                    style={{ letterSpacing: '0.08em' }}
+                    className="w-full text-[11px] font-semibold text-[#D9A34A] border border-[#D9A34A] rounded-lg uppercase transition-all duration-200 hover:bg-[rgba(217,163,74,0.08)]"
+                    style={{ letterSpacing: '0.08em', minHeight: '44px' }}
                   >
                     СОХРАНИТЬ ПРОЕКТ
                   </button>
                   <button
                     className="text-center text-[#D9A34A] uppercase font-semibold transition-colors duration-200 hover:text-[#E9B65C]"
-                    style={{ fontSize: '11px', letterSpacing: '0.1em' }}
+                    style={{ fontSize: '11px', letterSpacing: '0.1em', minHeight: '44px' }}
                   >
                     ПОДЕЛИТЬСЯ ПРОЕКТОМ
                   </button>
