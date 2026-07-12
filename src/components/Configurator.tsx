@@ -278,7 +278,7 @@ export default function Configurator() {
   const [activeTab, setActiveTab] = useState(0);
   const [activeView, setActiveView] = useState(0); // 0=Экстерьер, 1=Планировка, 2=Интерьер
   const [fullscreen, setFullscreen] = useState(false);
-  const [mode, setMode] = useState<'photo' | '3d'>('photo');
+  const [mode, setMode] = useState<'photo' | '3d'>('3d');
 
   const [floors, setFloors] = useState<1 | 2>(1);
   const [height, setHeight] = useState(8.0);
