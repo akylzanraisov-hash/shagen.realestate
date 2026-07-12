@@ -2449,7 +2449,7 @@
   window.addEventListener('error', function (e) {
     showFatal('Ошибка выполнения: ' + (e.message || e.type) + '. Сделайте скриншот этого текста.');
   });
-  var BUILD_TAG = 'MOBILE_TOUCH_V6';
+  var BUILD_TAG = 'SYNC_V7';
 
   /* ---------- палитры и типы ---------- */
   var ROOF = ['#23272E', '#3A3F47', '#6B7280', '#14171C'];
@@ -3177,7 +3177,19 @@
       needsRebuild = true;
     }
   });
-  try { window.parent.postMessage({ type: 'shag3d-ready' }, '*'); } catch (e2) {}
+  /* ---------- рукопожатие с сайтом: повторяем ready, пока не ответят ---------- */
+  var handshakeDone = false;
+  var handshakeTries = 0;
+  function sayReady() {
+    if (handshakeDone || handshakeTries++ > 40) return;   // 40 попыток ≈ 10 секунд
+    try { window.parent.postMessage({ type: 'shag3d-ready' }, '*'); } catch (e2) {}
+    setTimeout(sayReady, 250);
+  }
+  /* любое сообщение от сайта = рукопожатие состоялось */
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'shag3d') handshakeDone = true;
+  });
+  sayReady();
 
   /* ---------- главный цикл ---------- */
   var look = new T.Vector3();
