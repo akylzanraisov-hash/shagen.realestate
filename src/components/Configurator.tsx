@@ -355,7 +355,7 @@ export default function Configurator() {
 
   return (
     <>
-      <section className="py-10">
+      <section id="configurator" className="py-10">
         <div className="max-w-[1280px] mx-auto px-6">
           <div
             className="rounded-[20px] p-4 md:p-6"
@@ -529,7 +529,7 @@ export default function Configurator() {
                     <iframe
                       ref={frameRef}
                       src="/configurator3d.html?embed=1"
-                      title="3D конструктор"
+                      title="3D-конструктор дома"
                       style={{
                         position: 'absolute',
                         inset: 0,
@@ -556,17 +556,23 @@ export default function Configurator() {
                       padding: '4px 6px',
                     }}
                   >
-                    {[Rotate3d, Share2, Undo2, Move].map((Icon, i) => (
+                    {([
+                      [Rotate3d, 'Вращение'],
+                      [Share2, 'Поделиться'],
+                      [Undo2, 'Отменить'],
+                      [Move, 'Переместить'],
+                    ] as [typeof Rotate3d, string][]).map(([Icon, label]) => (
                       <button
-                        key={i}
+                        key={label}
+                        aria-label={label}
                         className="toolbar-btn flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       >
                         <Icon className="toolbar-icon" strokeWidth={1.5} />
                       </button>
                     ))}
                     <button
+                      aria-label="Сбросить камеру"
                       className="toolbar-btn flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
-                      title="Сбросить камеру"
                     >
                       <RotateCcw className="toolbar-icon" strokeWidth={1.5} />
                     </button>
@@ -577,6 +583,7 @@ export default function Configurator() {
                     {mode === 'photo' && (
                       <button
                         onClick={() => setFullscreen(true)}
+                        aria-label="Развернуть на весь экран"
                         className="w-9 h-9 flex items-center justify-center rounded-lg text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                         style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
                       >
@@ -584,6 +591,7 @@ export default function Configurator() {
                       </button>
                     )}
                     <button
+                      aria-label="Сделать снимок"
                       className="w-9 h-9 flex items-center justify-center rounded-full text-[#8B93A1] hover:text-[#D9A34A] transition-colors duration-200"
                       style={{ background: 'rgba(14,18,24,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
                     >
@@ -591,13 +599,13 @@ export default function Configurator() {
                     </button>
                     <button
                       onClick={() => setMode(m => m === 'photo' ? '3d' : 'photo')}
+                      aria-label={mode === 'photo' ? 'Переключить в 3D' : 'Переключить в Фото'}
                       className="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200"
                       style={{
                         background: mode === '3d' ? '#D9A34A' : 'rgba(14,18,24,0.9)',
                         border: mode === '3d' ? 'none' : '1px solid rgba(255,255,255,0.08)',
                         color: mode === '3d' ? '#171006' : '#8B93A1',
                       }}
-                      title={mode === 'photo' ? 'Переключить в 3D' : 'Переключить в Фото'}
                     >
                       <Globe size={15} strokeWidth={1.5} />
                     </button>

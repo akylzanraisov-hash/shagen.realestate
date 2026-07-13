@@ -9,7 +9,7 @@ const advantages = [
 
 export default function Hero() {
   return (
-    <section className="relative flex flex-col overflow-hidden" style={{ minHeight: '100svh' }}>
+    <section id="hero" className="relative flex flex-col overflow-hidden" style={{ minHeight: '100svh' }}>
       {/* Background image */}
       <div className="absolute inset-0">
         <img

@@ -1,8 +1,11 @@
 import { Instagram, Send, Youtube } from 'lucide-react';
 
+const socialLabels = ['Instagram', 'Telegram', 'YouTube'];
+
 export default function Footer() {
   return (
     <footer
+      id="contacts"
       className="pt-12 pb-6"
       style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
     >
@@ -105,13 +108,34 @@ export default function Footer() {
               >
                 +7 (999) 123-45-67
               </a>
-              <a
-                href="mailto:info@shag-engineering.ru"
-                className="transition-colors duration-200 hover:text-white"
-                style={{ fontSize: '13px', color: '#8B93A1' }}
-              >
-                info@shag-engineering.ru
-              </a>
+
+              {/* Email list */}
+              <div className="flex flex-col gap-3">
+                {[
+                  { role: 'Общие вопросы', email: 'info@shagenrealestate.com' },
+                  { role: 'Продажи', email: 'sales@shagenrealestate.com' },
+                  { role: 'Поддержка', email: 'support@shagenrealestate.com' },
+                  { role: 'Инвесторам', email: 'invest@shagenrealestate.com' },
+                  { role: 'Директор', email: 'ceo@shagenrealestate.com' },
+                ].map(({ role, email }) => (
+                  <div key={email} className="flex flex-col">
+                    <span
+                      className="uppercase"
+                      style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#707887' }}
+                    >
+                      {role}
+                    </span>
+                    <a
+                      href={`mailto:${email}`}
+                      className="transition-colors duration-200 hover:text-[#D9A34A]"
+                      style={{ fontSize: '13px', color: '#C7CBD3', minHeight: '44px', display: 'flex', alignItems: 'center' }}
+                    >
+                      {email}
+                    </a>
+                  </div>
+                ))}
+              </div>
+
               <span style={{ fontSize: '13px', color: '#8B93A1' }}>
                 г. Москва, ул. Примерная, 1
               </span>
@@ -120,6 +144,7 @@ export default function Footer() {
               {[Instagram, Send, Youtube].map((Icon, i) => (
                 <button
                   key={i}
+                  aria-label={socialLabels[i]}
                   className="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 hover:border-[#D9A34A] hover:text-[#D9A34A]"
                   style={{
                     border: '1px solid rgba(255,255,255,0.15)',

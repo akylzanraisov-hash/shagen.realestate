@@ -438,7 +438,7 @@ export default function FloorPlanner() {
 
   return (
     <>
-      <section className="py-10">
+      <section id="planner" className="py-10">
         <div className="max-w-[1280px] mx-auto px-6">
           <div
             className="rounded-[20px] p-4 md:p-6"

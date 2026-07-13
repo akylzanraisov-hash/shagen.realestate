@@ -10,7 +10,7 @@ const stats = [
 
 export default function WhyUs() {
   return (
-    <section className="py-12">
+    <section id="why-us" className="py-12">
       <div className="max-w-[1280px] mx-auto px-6">
         <div className="w-full mb-8" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
         <h2
