@@ -1,6 +1,32 @@
 import { Instagram, Send, Youtube } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CONTACTS } from '../content/site-content';
 
-const socialLabels = ['Instagram', 'Telegram', 'YouTube'];
+const menuLinks = [
+  { label: 'Главная', to: '/' },
+  { label: 'Недвижимость', to: '/real-estate' },
+  { label: 'Строительство', to: '/construction' },
+  { label: 'Инвестиции', to: '/investment' },
+  { label: 'Дома A-Frame', to: '/a-frame-houses' },
+  { label: 'Контакты', to: '/contacts' },
+  { label: 'Блог', to: '/blog' },
+];
+
+const projectLinks = ['A-Frame 6×8', 'A-Frame 6×10', 'A-Frame 8×12', 'A-Frame Max'];
+
+const emailList = [
+  { role: 'Общие вопросы', email: 'info@shagenrealestate.com' },
+  { role: 'Продажи', email: 'sales@shagenrealestate.com' },
+  { role: 'Поддержка', email: 'support@shagenrealestate.com' },
+  { role: 'Инвесторам', email: 'invest@shagenrealestate.com' },
+  { role: 'Директор', email: 'ceo@shagenrealestate.com' },
+];
+
+const socialIcons = [
+  { Icon: Instagram, label: 'Instagram', href: CONTACTS.instagram },
+  { Icon: Send, label: 'Telegram', href: CONTACTS.telegram },
+  { Icon: Youtube, label: 'YouTube', href: CONTACTS.youtube },
+];
 
 export default function Footer() {
   return (
@@ -47,25 +73,15 @@ export default function Footer() {
               МЕНЮ
             </span>
             <div className="flex flex-col gap-2.5">
-              {[
-                { label: 'Главная', gold: false },
-                { label: 'Проекты', gold: false },
-                { label: 'Конструкции', gold: false },
-                { label: '3D-Конструктор', gold: true },
-                { label: 'О компании', gold: false },
-                { label: 'Контакты', gold: false },
-              ].map(({ label, gold }) => (
-                <a
-                  key={label}
-                  href="#"
+              {menuLinks.map(({ label, to }) => (
+                <Link
+                  key={to}
+                  to={to}
                   className="transition-colors duration-200 hover:text-white"
-                  style={{
-                    fontSize: '13px',
-                    color: gold ? '#D9A34A' : '#8B93A1',
-                  }}
+                  style={{ fontSize: '13px', color: '#8B93A1' }}
                 >
                   {label}
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -79,15 +95,15 @@ export default function Footer() {
               ПРОЕКТЫ
             </span>
             <div className="flex flex-col gap-2.5">
-              {['A-Frame 6x8', 'A-Frame 6x10', 'A-Frame 8x12', 'A-Frame Max'].map((item) => (
-                <a
+              {projectLinks.map((item) => (
+                <Link
                   key={item}
-                  href="#"
+                  to="/a-frame-houses"
                   className="transition-colors duration-200 hover:text-white"
                   style={{ fontSize: '13px', color: '#8B93A1' }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -102,22 +118,15 @@ export default function Footer() {
             </span>
             <div className="flex flex-col gap-2.5 mb-5">
               <a
-                href="tel:+79991234567"
+                href={CONTACTS.phoneHref}
                 className="transition-colors duration-200 hover:text-white"
                 style={{ fontSize: '13px', color: '#8B93A1' }}
               >
-                +7 (999) 123-45-67
+                {CONTACTS.phone}
               </a>
 
-              {/* Email list */}
               <div className="flex flex-col gap-3">
-                {[
-                  { role: 'Общие вопросы', email: 'info@shagenrealestate.com' },
-                  { role: 'Продажи', email: 'sales@shagenrealestate.com' },
-                  { role: 'Поддержка', email: 'support@shagenrealestate.com' },
-                  { role: 'Инвесторам', email: 'invest@shagenrealestate.com' },
-                  { role: 'Директор', email: 'ceo@shagenrealestate.com' },
-                ].map(({ role, email }) => (
+                {emailList.map(({ role, email }) => (
                   <div key={email} className="flex flex-col">
                     <span
                       className="uppercase"
@@ -137,14 +146,15 @@ export default function Footer() {
               </div>
 
               <span style={{ fontSize: '13px', color: '#8B93A1' }}>
-                г. Москва, ул. Примерная, 1
+                {CONTACTS.address}
               </span>
             </div>
             <div className="flex gap-2">
-              {[Instagram, Send, Youtube].map((Icon, i) => (
-                <button
-                  key={i}
-                  aria-label={socialLabels[i]}
+              {socialIcons.map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
                   className="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 hover:border-[#D9A34A] hover:text-[#D9A34A]"
                   style={{
                     border: '1px solid rgba(255,255,255,0.15)',
@@ -152,19 +162,18 @@ export default function Footer() {
                   }}
                 >
                   <Icon size={16} strokeWidth={1.5} />
-                </button>
+                </a>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom line */}
         <div
           className="w-full mb-4"
           style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }}
         />
         <p className="text-center" style={{ fontSize: '12px', color: '#8B93A1' }}>
-          © 2024 SHAG Engineering. Все права защищены.
+          © 2025 SHAG Engineering. Все права защищены.
         </p>
       </div>
     </footer>

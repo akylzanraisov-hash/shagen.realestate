@@ -1,8 +1,9 @@
 import { Phone, MapPin, Instagram, Send, Youtube } from 'lucide-react';
 import PageSeo from '../components/PageSeo';
 import InnerPageHero from '../components/InnerPageHero';
+import { CONTACTS } from '../content/site-content';
 
-const emails = [
+const emailList = [
   { role: 'Общие вопросы', email: 'info@shagenrealestate.com' },
   { role: 'Продажи', email: 'sales@shagenrealestate.com' },
   { role: 'Поддержка', email: 'support@shagenrealestate.com' },
@@ -10,10 +11,10 @@ const emails = [
   { role: 'Директор', email: 'ceo@shagenrealestate.com' },
 ];
 
-const socials = [
-  { Icon: Instagram, label: 'Instagram', href: '#' },
-  { Icon: Send, label: 'Telegram', href: '#' },
-  { Icon: Youtube, label: 'YouTube', href: '#' },
+const socialIcons = [
+  { Icon: Instagram, label: 'Instagram', hrefKey: 'instagram' as const },
+  { Icon: Send, label: 'Telegram', hrefKey: 'telegram' as const },
+  { Icon: Youtube, label: 'YouTube', hrefKey: 'youtube' as const },
 ];
 
 export default function Contacts() {
@@ -21,7 +22,7 @@ export default function Contacts() {
     <>
       <PageSeo
         title="Контакты — SHAG Engineering"
-        description="Свяжитесь с командой SHAG Engineering: по вопросам продаж, строительства, инвестиций и поддержки. Телефон, почта, адрес офиса. Ответим в течение 24 часов."
+        description="Свяжитесь с командой SHAG Engineering: по вопросам продаж, строительства, инвестиций и поддержки. Телефон, почта, адрес офиса. Ответим в течение одного рабочего дня."
         canonical="https://shagenrealestate.com/contacts"
       />
       <InnerPageHero
@@ -30,25 +31,26 @@ export default function Contacts() {
         subtitle="Обратитесь к нужному специалисту напрямую. Отвечаем в течение одного рабочего дня."
       />
 
-      <section id="contacts-section" className="py-16">
+      <section className="py-16">
         <div className="max-w-[1280px] mx-auto px-6">
 
-          {/* Email cards */}
           <h2 className="uppercase font-bold text-[#F3F5F8] mb-8" style={{ fontSize: '18px', letterSpacing: '0.1em' }}>
             ОТДЕЛЫ И ПОЧТА
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
-            {emails.map(({ role, email }) => (
+            {emailList.map(({ role, email }) => (
               <a
                 key={email}
                 href={`mailto:${email}`}
-                className="rounded-[14px] p-6 flex flex-col gap-2 transition-all duration-200 hover:border-[rgba(217,163,74,0.4)] group"
+                className="rounded-[14px] p-6 flex flex-col gap-3 transition-all duration-200 group"
                 style={{
                   background: '#10151C',
                   border: '1px solid rgba(255,255,255,0.07)',
                   minHeight: '100px',
                   textDecoration: 'none',
                 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(217,163,74,0.4)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; }}
               >
                 <span
                   className="uppercase"
@@ -66,9 +68,9 @@ export default function Contacts() {
             ))}
           </div>
 
-          {/* Phone + Address + Socials */}
           <div className="w-full mb-10" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Phone */}
             <div
               className="rounded-[14px] p-6 flex gap-4"
               style={{ background: '#10151C', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -87,15 +89,16 @@ export default function Contacts() {
                   ТЕЛЕФОН
                 </span>
                 <a
-                  href="tel:+79991234567"
+                  href={CONTACTS.phoneHref}
                   className="font-semibold transition-colors duration-200 hover:text-[#D9A34A]"
-                  style={{ fontSize: '15px', color: '#F3F5F8' }}
+                  style={{ fontSize: '15px', color: '#F3F5F8', minHeight: '44px', display: 'flex', alignItems: 'center' }}
                 >
-                  +7 (999) 123-45-67
+                  {CONTACTS.phone}
                 </a>
               </div>
             </div>
 
+            {/* Address */}
             <div
               className="rounded-[14px] p-6 flex gap-4"
               style={{ background: '#10151C', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -113,13 +116,13 @@ export default function Contacts() {
                 >
                   АДРЕС
                 </span>
-                {/* TODO: заменить на реальный адрес заказчика */}
                 <span className="font-semibold" style={{ fontSize: '15px', color: '#F3F5F8' }}>
-                  г. Москва, ул. Примерная, 1
+                  {CONTACTS.address}
                 </span>
               </div>
             </div>
 
+            {/* Socials */}
             <div
               className="rounded-[14px] p-6"
               style={{ background: '#10151C', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -131,16 +134,18 @@ export default function Contacts() {
                 СОЦИАЛЬНЫЕ СЕТИ
               </span>
               <div className="flex gap-3">
-                {socials.map(({ Icon, label, href }) => (
+                {socialIcons.map(({ Icon, label, hrefKey }) => (
                   <a
                     key={label}
-                    href={href}
+                    href={CONTACTS[hrefKey]}
                     aria-label={label}
-                    className="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 hover:border-[#D9A34A] hover:text-[#D9A34A]"
+                    className="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 hover:text-[#D9A34A]"
                     style={{
                       border: '1px solid rgba(255,255,255,0.15)',
                       color: '#8B93A1',
                     }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#D9A34A'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)'; }}
                   >
                     <Icon size={17} strokeWidth={1.5} />
                   </a>
@@ -152,17 +157,13 @@ export default function Contacts() {
           {/* Map placeholder */}
           <div
             className="mt-10 rounded-[16px] overflow-hidden flex items-center justify-center"
-            style={{
-              height: '300px',
-              background: '#10151C',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}
+            style={{ height: '280px', background: '#10151C', border: '1px solid rgba(255,255,255,0.07)' }}
           >
             {/* TODO: встроить реальную карту (Яндекс.Карты или Google Maps) */}
             <div className="text-center">
-              <MapPin size={36} strokeWidth={1} style={{ color: 'rgba(217,163,74,0.4)', margin: '0 auto 12px' }} />
-              <span style={{ fontSize: '13px', color: '#707887', letterSpacing: '0.06em' }}>
-                КАРТА БУДЕТ ЗДЕСЬ
+              <MapPin size={36} strokeWidth={1} style={{ color: 'rgba(217,163,74,0.35)', margin: '0 auto 12px' }} />
+              <span style={{ fontSize: '12px', color: '#707887', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                КАРТА — СКОРО
               </span>
             </div>
           </div>
