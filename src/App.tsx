@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import ContactWidget from './components/ContactWidget';
 import Home from './pages/Home';
 import RealEstate from './pages/RealEstate';
 import Construction from './pages/Construction';
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/blog" element={<Blog />} />
       </Routes>
       <Footer />
+      <ContactWidget />
     </div>
   );
 }
