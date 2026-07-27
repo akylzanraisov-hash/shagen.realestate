@@ -21,12 +21,85 @@ const navItems: NavItem[] = [
 
 function Logo() {
   return (
-    <NavLink to="/" className="flex-shrink-0" aria-label="Luxury Villas — главная">
-      <img
-        src="/Screenshot_2026-07-27_at_8.30.57_PM.png"
-        alt="Luxury Villas — Exclusive Real Estate"
-        style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
-      />
+    <NavLink
+      to="/"
+      className="flex items-center gap-3 flex-shrink-0"
+      style={{ opacity: 1, transition: 'opacity 180ms ease' }}
+      aria-label="Luxury Villas — главная"
+    >
+      {/* Stacked-layers building icon */}
+      <svg width="48" height="52" viewBox="0 0 50 52" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lv-slab" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#f2f2f2" />
+            <stop offset="28%"  stopColor="#d6d6d6" />
+            <stop offset="72%"  stopColor="#686868" />
+            <stop offset="100%" stopColor="#161616" />
+          </linearGradient>
+          <linearGradient id="lv-glow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stopColor="#8a6010" stopOpacity="0"   />
+            <stop offset="30%"  stopColor="#E8B840" stopOpacity="0.92" />
+            <stop offset="70%"  stopColor="#E8B840" stopOpacity="0.92" />
+            <stop offset="100%" stopColor="#8a6010" stopOpacity="0"   />
+          </linearGradient>
+        </defs>
+        {/* Slab 1 – top, narrowest */}
+        <rect x="12" y="1"  width="26" height="9" rx="1" fill="url(#lv-slab)" />
+        <rect x="12" y="10" width="26" height="1.5" fill="url(#lv-glow)" />
+        {/* Slab 2 */}
+        <rect x="8"  y="14" width="34" height="9" rx="1" fill="url(#lv-slab)" />
+        <rect x="8"  y="23" width="34" height="1.5" fill="url(#lv-glow)" />
+        {/* Slab 3 */}
+        <rect x="4"  y="27" width="42" height="9" rx="1" fill="url(#lv-slab)" />
+        <rect x="4"  y="36" width="42" height="1.5" fill="url(#lv-glow)" />
+        {/* Slab 4 – bottom, widest */}
+        <rect x="0"  y="40" width="50" height="9" rx="1" fill="url(#lv-slab)" />
+        <rect x="0"  y="49" width="50" height="1.5" fill="url(#lv-glow)" />
+      </svg>
+
+      {/* Word-mark */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', lineHeight: 1 }}>
+        {/* LUXURY */}
+        <span style={{
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontSize: '21px',
+          fontWeight: 700,
+          letterSpacing: '5px',
+          background: 'linear-gradient(180deg, #f0cc6a 0%, #d4a03a 55%, #9a7020 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          display: 'block',
+        }}>
+          LUXURY
+        </span>
+
+        {/* — VILLAS — */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'block', width: '13px', height: '1px', background: '#D9A34A', flexShrink: 0 }} />
+          <span style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: '9px',
+            letterSpacing: '4px',
+            color: '#D9A34A',
+            lineHeight: 1,
+          }}>
+            VILLAS
+          </span>
+          <span style={{ display: 'block', width: '13px', height: '1px', background: '#D9A34A', flexShrink: 0 }} />
+        </div>
+
+        {/* EXCLUSIVE REAL ESTATE */}
+        <span style={{
+          fontFamily: '"Helvetica Neue", Arial, sans-serif',
+          fontSize: '6px',
+          letterSpacing: '2.5px',
+          color: '#8a7030',
+          lineHeight: 1,
+        }}>
+          EXCLUSIVE REAL ESTATE
+        </span>
+      </div>
     </NavLink>
   );
 }
