@@ -21,19 +21,12 @@ const navItems: NavItem[] = [
 
 function Logo() {
   return (
-    <NavLink to="/" className="flex flex-col items-center flex-shrink-0" aria-label="SHAG Engineering — главная">
-      <svg width="36" height="30" viewBox="0 0 36 30" fill="none">
-        <rect x="0" y="14" width="8" height="16" fill="#D9A34A" />
-        <rect x="10" y="7" width="8" height="23" fill="#D9A34A" />
-        <rect x="20" y="0" width="8" height="30" fill="#D9A34A" />
-        <rect x="30" y="10" width="6" height="20" fill="#D9A34A" />
-      </svg>
-      <span className="text-white font-bold mt-1 leading-none" style={{ letterSpacing: '0.35em', fontSize: '14px' }}>
-        SHAG
-      </span>
-      <span className="text-[#D9A34A] mt-0.5 leading-none" style={{ fontSize: '9px', letterSpacing: '0.12em' }}>
-        — ENGINEERING —
-      </span>
+    <NavLink to="/" className="flex-shrink-0" aria-label="Luxury Villas — главная">
+      <img
+        src="/Screenshot_2026-07-27_at_8.30.57_PM.png"
+        alt="Luxury Villas — Exclusive Real Estate"
+        style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
+      />
     </NavLink>
   );
 }
