@@ -1,0 +1,11 @@
+# Only the per-function overrides Zumi needs; run `supabase init` to get the full default file.
+project_id = "zumi"
+
+[functions.call-twiml]
+verify_jwt = false   # Twilio webhook, verified by X-Twilio-Signature
+
+[functions.call-recording]
+verify_jwt = false   # Twilio webhook, verified by X-Twilio-Signature
+
+[functions.whatsapp-dispatch]
+verify_jwt = false   # cron, checks the service-role key itself

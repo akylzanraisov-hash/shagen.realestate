@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Zumi</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Unbounded:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-top: #1c2b2f; --ink: #0c1214; --bg-bottom: #0a0f11;
+      --glass: rgba(255,255,255,.055); --border: rgba(255,255,255,.10);
+      --text: #f3f6f5; --dim: rgba(243,246,245,.62); --mint: #6ee7a8; --lilac: #b18cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text); font: 500 16px/1.6 Manrope, system-ui, sans-serif;
+      background:
+        radial-gradient(60% 40% at 85% 5%, rgba(177,140,255,.18), transparent 70%),
+        radial-gradient(60% 50% at 5% 80%, rgba(110,231,168,.10), transparent 70%),
+        linear-gradient(180deg, var(--bg-top), var(--ink) 45%, var(--bg-bottom));
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--mint); font: 700 22px Unbounded, sans-serif; text-decoration: none; }
+    .card { margin-top: 24px; padding: 24px; border-radius: 26px; background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(20px); }
+    h1 { font-weight: 800; font-size: clamp(26px, 6vw, 36px); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 12px; }
+    h2 { color: var(--mint); font-weight: 800; font-size: 18px; margin: 24px 0 8px; }
+    ul { padding-left: 20px; margin: 8px 0; } li::marker { color: var(--lilac); }
+    p { margin: 8px 0; } .meta { color: var(--dim); font-size: 13px; margin-top: 18px; }
+    .cta { display: inline-block; margin-top: 20px; padding: 14px 22px; border-radius: 999px; background: var(--mint); color: #0c1214; font-weight: 800; text-decoration: none; }
+    .empty { color: var(--dim); text-align: center; padding: 60px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="brand" href="https://zumi.app">
+      <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4BFFF"/><stop offset="1" stop-color="#B18CFF"/></linearGradient></defs><path d="M32 8c13 0 24 10 24 24 0 15-9 24-24 24S8 47 8 32C8 18 19 8 32 8z" fill="url(#m)"/><ellipse cx="24" cy="32" rx="3.2" ry="4.2" fill="#1A1430"/><ellipse cx="40" cy="32" rx="3.2" ry="4.2" fill="#1A1430"/><path d="M27 42c3 3 7 3 10 0" stroke="#1A1430" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+      Zumi
+    </a>
+    <article class="card" id="doc"><div class="empty">Загрузка…</div></article>
+  </main>
+  <script>
+    // Fill these two in (Supabase → Settings → API). The anon key is public by design.
+    const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+
+    const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const inline = (s) => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    function render(md) {
+      let html = '', list = false;
+      for (const raw of md.split('\n')) {
+        const l = raw.trimEnd();
+        const isItem = /^[-•]\s/.test(l);
+        if (list && !isItem) { html += '</ul>'; list = false; }
+        if (!l.trim()) continue;
+        if (l.startsWith('# ')) html += `<h1>${inline(l.slice(2))}</h1>`;
+        else if (l.startsWith('## ')) html += `<h2>${inline(l.slice(3))}</h2>`;
+        else if (isItem) { if (!list) { html += '<ul>'; list = true; } html += `<li>${inline(l.replace(/^[-•]\s/, ''))}</li>`; }
+        else html += `<p>${inline(l)}</p>`;
+      }
+      return html + (list ? '</ul>' : '');
+    }
+
+    (async () => {
+      const el = document.getElementById('doc');
+      // supports /p/<slug>, /<slug> and ?s=<slug>
+      const slug = new URLSearchParams(location.search).get('s') || location.pathname.split('/').filter(Boolean).pop();
+      if (!slug || !/^[a-z0-9]{4,12}$/.test(slug)) { el.innerHTML = '<div class="empty">Ссылка не найдена</div>'; return; }
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/pages?slug=eq.${slug}&select=title,body,author,created_at`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+        });
+        const [page] = await res.json();
+        if (!page) throw new Error('not found');
+        document.title = page.title;
+        const hasH1 = /^#\s/m.test(page.body);
+        el.innerHTML = (hasH1 ? '' : `<h1>${esc(page.title)}</h1>`) + render(page.body) +
+          `<div class="meta">${page.author ? esc(page.author) + ' · ' : ''}${new Date(page.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>`;
+      } catch {
+        el.innerHTML = '<div class="empty">Ссылка не найдена или устарела</div>';
+      }
+    })();
+  </script>
+</body>
+</html>
